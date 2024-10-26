@@ -29,7 +29,7 @@ async def update_users(data: UserUpdates):
         google.add_user_to_team(user, user.team)
 
     last_received_user_updates = data.users
-    return {"status": "success", "message": f"{len(data.updates)} users updated successfully"}
+    return {"status": "success", "message": f"{len(to_update)} users updated successfully"}
 
 
 if __name__ == "__main__":
