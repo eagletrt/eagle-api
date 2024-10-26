@@ -23,7 +23,7 @@ class AirtableUser(BaseModel):
     surname: str
     email: str
     team: AirtableTeam
-    group: AirtableGroup
+    group: Union[AirtableGroup, None]
     ranks: Union[List[AirtableRank], None]
     role: int
     role_override: Union[int, None]
