@@ -2,6 +2,7 @@ import os
 
 API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
 API_PORT: int = int(os.getenv("API_PORT", 8080))
+API_PATH: str = os.getenv("API_PATH", "")
 BEARER_TOKEN: str = os.getenv("BEARER_TOKEN")
 
 GOOGLE_SERVICE_ACCOUNT_JSON: str = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
