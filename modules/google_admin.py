@@ -7,7 +7,7 @@ from modules.models import AirtableUser, AirtableTeam
 AIRTABLE_TO_GOOGLE_TEAM_MAPPING = {
     'CM':  'communications@eagletrt.it',
     'DMT': 'dynamics@eagletrt.it',
-    'HW':  'hardware@eagletrt.it',
+    'HW':  'electronics@eagletrt.it',
     'MGT': 'management@eagletrt.it',
     'MT':  'mechanics@eagletrt.it',
     'SW':  'software@eagletrt.it'
@@ -64,3 +64,17 @@ class GoogleAdminAPI:
             error = e.error_details[0]
             if error['reason'] == 'duplicate':
                 return f"User {user_email} is already in group {group_email}"
+
+    def list_all_users(self) -> list[str]:
+        try:
+            response = self._service.users().list(
+                customer='my_customer',
+                maxResults=500,
+                orderBy='email'
+            ).execute()
+
+            users = response.get('users', [])
+            return [user['primaryEmail'] for user in users]
+
+        except errors.HttpError as e:
+            return []
