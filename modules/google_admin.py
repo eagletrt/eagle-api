@@ -5,12 +5,12 @@ from modules.models import AirtableUser, AirtableTeam
 
 
 AIRTABLE_TO_GOOGLE_TEAM_MAPPING = {
-    'CM':  'communications@eagletrt.it',
-    'DMT': 'dynamics@eagletrt.it',
-    'HW':  'electronics@eagletrt.it',
-    'MGT': 'management@eagletrt.it',
-    'MT':  'mechanics@eagletrt.it',
-    'SW':  'software@eagletrt.it'
+    'CM':  'communications-team@eagletrt.it',
+    'DMT': 'dynamics-team@eagletrt.it',
+    'HW':  'hardware-team@eagletrt.it',
+    'MGT': 'management-team@eagletrt.it',
+    'MT':  'mechanics-team@eagletrt.it',
+    'SW':  'software-team@eagletrt.it'
 }
 
 
