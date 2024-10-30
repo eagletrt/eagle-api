@@ -47,23 +47,25 @@ class GoogleAdminAPI:
                     "changePasswordAtNextLogin": True
                 }
                 google_user = self._service.users().insert(body=user_body).execute()
+                self._add_user_to_group(email, "members@eagletrt.it")
                 return google_user
 
-    def add_user_to_team(self, user: AirtableUser, team: AirtableTeam):
-        user_email = utils.get_eagletrt_email(user.email)
-        group_email = AIRTABLE_TO_GOOGLE_TEAM_MAPPING[team.name]
-
+    def _add_user_to_group(self, user_email: str, group_email: str):
         try:
             result = self._service.members().insert(
                 groupKey=group_email,
                 body={"email": user_email}
             ).execute()
             return result
-
         except errors.HttpError as e:
             error = e.error_details[0]
             if error['reason'] == 'duplicate':
                 return f"User {user_email} is already in group {group_email}"
+
+    def add_user_to_team(self, user: AirtableUser, team: AirtableTeam):
+        user_email = utils.get_eagletrt_email(user.email)
+        group_email = AIRTABLE_TO_GOOGLE_TEAM_MAPPING[team.name]
+        return self._add_user_to_group(user_email, group_email)
 
     def list_all_users(self) -> list[str]:
         try:
