@@ -80,3 +80,12 @@ class GoogleAdminAPI:
 
         except errors.HttpError as e:
             return []
+
+    def list_user_groups(self, user_email: str) -> list[str]:
+        try:
+            response = self._service.groups().list(userKey=user_email).execute()
+            groups = response.get('groups', [])
+            return [group['email'] for group in groups]
+
+        except errors.HttpError as e:
+            return []
