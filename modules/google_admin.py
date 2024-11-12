@@ -3,15 +3,7 @@ from googleapiclient import discovery, errors
 from modules import utils
 from modules.models import AirtableUser, AirtableTeam
 
-
-AIRTABLE_TO_GOOGLE_TEAM_MAPPING = {
-    'CM':  'communications-team@eagletrt.it',
-    'DMT': 'dynamics-team@eagletrt.it',
-    'HW':  'hardware-team@eagletrt.it',
-    'MGT': 'management-team@eagletrt.it',
-    'MT':  'mechanics-team@eagletrt.it',
-    'SW':  'software-team@eagletrt.it'
-}
+AIRTABLE_TO_GOOGLE_TEAM_MAPPING = {}
 
 
 class GoogleAdminAPI:
@@ -47,7 +39,7 @@ class GoogleAdminAPI:
                     "changePasswordAtNextLogin": True
                 }
                 google_user = self._service.users().insert(body=user_body).execute()
-                self._add_user_to_group(email, "members@eagletrt.it")
+                self._add_user_to_group(email, "members@groups.eagletrt.it")
                 return google_user
 
     def _add_user_to_group(self, user_email: str, group_email: str):
