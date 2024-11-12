@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 db = Database("sqlite", "/data/oreLab.db", create_db=True)
 
 
-class IngressoLab(db.Entity):
+class PresenzaLab(db.Entity):
     email = Required(str)
     entrata = Required(datetime, default=datetime.now)
     uscita = Optional(datetime)

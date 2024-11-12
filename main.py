@@ -1,11 +1,17 @@
-from fastapi import FastAPI, HTTPException, Depends
+from threading import Lock
+from datetime import datetime
+from pony.orm import db_session
+from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from modules import settings, utils
+from modules.db_ore import PresenzaLab
 from modules.models import UserUpdates
 from modules.google_admin import GoogleAdminAPI
 
 app = FastAPI()
 security = HTTPBearer()
+oreLock = Lock()
 google = GoogleAdminAPI(
     service_account_json=settings.GOOGLE_SERVICE_ACCOUNT_JSON,
     impersonate_admin_email=settings.GOOGLE_IMPERSONATE_ADMIN_EMAIL
@@ -29,8 +35,21 @@ async def update_users(data: UserUpdates) -> dict:
 
 
 @app.get("/userGroups", dependencies=[Depends(verify_token)])
-async def get_user_groups(email: str) -> list[str]:
+async def list_user_groups(email: str) -> list[str]:
     return google.list_user_groups(email)
+
+
+@app.get("/presenzaLab", response_class=HTMLResponse)
+async def presenzaLab(x_email: Header()):
+    with oreLock:
+        with db_session:
+            latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(lambda p: p.entrata).last()
+            if latest and latest.isActive:
+                latest.uscita = datetime.now()
+                return utils.orelab_uscita(latest.duration)
+            else:
+                latest = PresenzaLab(email=x_email, entrata=datetime.now())
+                return utils.orelab_entrata()
 
 
 if __name__ == "__main__":
