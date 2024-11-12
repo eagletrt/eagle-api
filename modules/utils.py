@@ -4,7 +4,7 @@ def get_eagletrt_email(email: str) -> str:
 
 
 def orelab_entrata() -> str:
-    return """
+    return f"""
     <html>
     <head>
         <title>Entrata Laboratorio</title>

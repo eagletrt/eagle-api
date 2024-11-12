@@ -40,16 +40,16 @@ async def list_user_groups(email: str) -> list[str]:
 
 
 @app.get("/presenzaLab", response_class=HTMLResponse)
-async def presenzaLab(x_email: Header()):
+async def presenzaLab(x_email: Header()) -> HTMLResponse:
     with oreLock:
         with db_session:
             latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(lambda p: p.entrata).last()
             if latest and latest.isActive:
                 latest.uscita = datetime.now()
-                return utils.orelab_uscita(latest.duration)
+                return HTMLResponse(content=utils.orelab_uscita(latest.duration), status_code=200)
             else:
                 latest = PresenzaLab(email=x_email, entrata=datetime.now())
-                return utils.orelab_entrata()
+                return HTMLResponse(content=utils.orelab_entrata(), status_code=200)
 
 
 if __name__ == "__main__":
