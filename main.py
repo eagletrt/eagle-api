@@ -39,7 +39,7 @@ async def list_user_groups(email: str) -> list[str]:
     return google.list_user_groups(email)
 
 
-@app.get("/presenzaLab", response_class=HTMLResponse)
+@app.get("/presenzaLab", response_class=HTMLResponse, response_model=None)
 async def presenzaLab(x_email: Header()) -> HTMLResponse:
     with oreLock:
         with db_session:
