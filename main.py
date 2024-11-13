@@ -40,7 +40,10 @@ async def list_user_groups(email: str) -> list[str]:
 
 
 @app.get("/presenzaLab", response_class=HTMLResponse, response_model=None)
-async def presenzaLab(x_email: Header()) -> HTMLResponse:
+async def presenzaLab(x_email: str = Header(default=None)):
+    if not x_email:
+        raise HTTPException(status_code=400, detail="Missing authentication")
+
     with oreLock:
         with db_session:
             latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(lambda p: p.entrata).last()
