@@ -22,8 +22,8 @@ def orelab_uscita(ore: float) -> HTMLResponse:
         4: "😌",
         5: "😎"
     }
-    ore = str(round(ore, 2))
     emoji = emoji_dict.get(int(ore // 1), "🥹")
+    ore = str(round(ore, 2))
 
     with open("pages/uscita_lab.html") as f:
         res = f.read().replace("{ore}", ore).replace("happy_hour_emoji", emoji)
