@@ -74,7 +74,7 @@ async def tecs_link_ore(x_email: str = Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
-    return RedirectResponse(url=f"https://t.me/ThonisNomasbot?start={x_email.split('@')[0]}")
+    return RedirectResponse(url=f"https://t.me/ThonisNomasbot?start={x_email.split('@')[0]}", status_code=302)
 
 
 @app.get("/oreLab")
@@ -92,6 +92,8 @@ async def oreLab(username: str, filter: str="month") -> dict:
             presenze = presenze.filter(lambda p: p.entrata >= datetime.now().replace() - timedelta(days=7))
         elif filter == "30d":
             presenze = presenze.filter(lambda p: p.entrata >= datetime.now() - timedelta(days=30))
+        else:
+            filter = "all" # default
         return {"ore": sum([utils.timedelta_to_hours(p.duration) for p in list(presenze)]), "filter": filter}
 
 
