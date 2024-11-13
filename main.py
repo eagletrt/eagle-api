@@ -49,10 +49,10 @@ async def presenzaLab(x_email: str = Header(default=None)):
             latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(desc(PresenzaLab.entrata)).first()
             if latest and latest.isActive:
                 latest.uscita = datetime.now()
-                return HTMLResponse(content=utils.orelab_uscita(latest.duration), status_code=200)
+                return utils.orelab_uscita(utils.timedelta_to_hours(latest.duration))
             else:
                 latest = PresenzaLab(email=x_email, entrata=datetime.now())
-                return HTMLResponse(content=utils.orelab_entrata(), status_code=200)
+                return utils.orelab_entrata()
 
 
 if __name__ == "__main__":
