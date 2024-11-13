@@ -26,6 +26,7 @@
 
                 if (response.ok) {
                     form.innerHTML = '<p>Entrata confermata!</p>';
+                    location.reload();
                 } else {
                     form.innerHTML = '<p>ERRORE: Entrata non registrata.</p>';
                 }

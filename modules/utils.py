@@ -26,7 +26,7 @@ def orelab_uscita(ore: float) -> HTMLResponse:
     ore = str(round(ore, 2))
 
     with open("pages/uscita_lab.html") as f:
-        res = f.read().replace("{ore}", ore).replace("happy_hour_emoji", emoji)
+        res = f.read().replace("{ore}", ore).replace("{happy_hour_emoji}", emoji)
     return HTMLResponse(content=res, status_code=200)
 
 
