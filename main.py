@@ -1,6 +1,6 @@
 from threading import Lock
-from datetime import datetime
-from pony.orm import db_session, desc
+from datetime import datetime, timedelta
+from pony.orm import db_session, desc, select
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -78,14 +78,21 @@ async def tecs_link_ore(x_email: str = Header(default=None)):
 
 
 @app.get("/oreLab")
-async def oreLab(username: str) -> dict:
+async def oreLab(username: str, filter: str="month") -> dict:
     if not username:
         raise HTTPException(status_code=400, detail="Missing username")
 
     with db_session:
-        presenze = list(PresenzaLab.select(lambda p: p.email == f"{username}@eagletrt.it" and
-                                           p.entrata.month == datetime.now().month))
-        return {"ore": sum([utils.timedelta_to_hours(p.duration) for p in presenze])}
+        presenze = select(p for p in PresenzaLab if p.email == f"{username}@eagletrt.it")
+        if filter == "month":
+            presenze = presenze.filter(lambda p: p.entrata.month == datetime.now().month)
+        elif filter == "year":
+            presenze = presenze.filter(lambda p: p.entrata.year == datetime.now().year)
+        elif filter == "7d":
+            presenze = presenze.filter(lambda p: p.entrata >= datetime.now().replace() - timedelta(days=7))
+        elif filter == "30d":
+            presenze = presenze.filter(lambda p: p.entrata >= datetime.now() - timedelta(days=30))
+        return {"ore": sum([utils.timedelta_to_hours(p.duration) for p in list(presenze)]), "filter": filter}
 
 
 if __name__ == "__main__":
