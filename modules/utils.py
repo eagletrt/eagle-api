@@ -24,7 +24,7 @@ def orelab_uscita(ore: float) -> HTMLResponse:
     }
 
     with open("pages/uscita_lab.html") as f:
-        res = f.read().format(ore=ore, happy_hour_emoji=emoji_dict.get(int(ore), "🥹"))
+        res = f.read().format(ore=round(ore, 2), happy_hour_emoji=emoji_dict.get(int(ore), "🥹"))
     return HTMLResponse(content=res, status_code=200)
 
 
