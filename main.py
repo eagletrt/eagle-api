@@ -1,8 +1,8 @@
 from threading import Lock
 from datetime import datetime
 from pony.orm import db_session, desc
-from fastapi.responses import HTMLResponse
 from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from modules import settings, utils
 from modules.db_ore import PresenzaLab
@@ -67,6 +67,24 @@ async def presenzaLab_confirm(x_email: str = Header(default=None)):
             else:
                 latest = PresenzaLab(email=x_email, entrata=datetime.now())
                 return HTMLResponse(content="Entrata confermata.", status_code=200)
+
+
+@app.get("/tecsLinkOre")
+async def tecs_link_ore(x_email: str = Header(default=None)):
+    if not x_email:
+        raise HTTPException(status_code=400, detail="Missing authentication")
+
+    return RedirectResponse(url=f"https://t.me/ThonisNomasbot?start={x_email.split('@')[0]}")
+
+
+@app.get("/oreLab")
+async def oreLab(username: str) -> dict:
+    if not username:
+        raise HTTPException(status_code=400, detail="Missing username")
+
+    with db_session:
+        presenze = list(PresenzaLab.select(lambda p: p.email == f"{username}@eagletrt.it"))
+        return {"ore": sum([utils.timedelta_to_hours(p.duration) for p in presenze])}
 
 
 if __name__ == "__main__":
