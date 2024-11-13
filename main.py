@@ -1,6 +1,6 @@
 from threading import Lock
 from datetime import datetime
-from pony.orm import db_session
+from pony.orm import db_session, desc
 from fastapi.responses import HTMLResponse
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -46,7 +46,7 @@ async def presenzaLab(x_email: str = Header(default=None)):
 
     with oreLock:
         with db_session:
-            latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(lambda p: p.entrata).last()
+            latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(desc(PresenzaLab.entrata)).first()
             if latest and latest.isActive:
                 latest.uscita = datetime.now()
                 return HTMLResponse(content=utils.orelab_uscita(latest.duration), status_code=200)
