@@ -83,7 +83,8 @@ async def oreLab(username: str) -> dict:
         raise HTTPException(status_code=400, detail="Missing username")
 
     with db_session:
-        presenze = list(PresenzaLab.select(lambda p: p.email == f"{username}@eagletrt.it"))
+        presenze = list(PresenzaLab.select(lambda p: p.email == f"{username}@eagletrt.it" and
+                                           p.entrata.month == datetime.now().month))
         return {"ore": sum([utils.timedelta_to_hours(p.duration) for p in presenze])}
 
 
