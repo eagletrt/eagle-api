@@ -8,33 +8,23 @@ def get_eagletrt_email(email: str) -> str:
 
 
 def orelab_entrata() -> HTMLResponse:
-    res = f"""
-    <html>
-    <head>
-        <title>Entrata Laboratorio</title>
-    </head>
-    <body>
-        <h1>Benvenuto/a :)</h1>
-        <p>La tua entrata è stata registrata correttamente.</p>
-    </body>
-    </html>
-    """
+    with open("pages/entrata_lab.html") as f:
+        res = f.read()
     return HTMLResponse(content=res, status_code=200)
 
 
 def orelab_uscita(ore: float) -> HTMLResponse:
-    res = f"""
-    <html>
-    <head>
-        <title>Uscita Laboratorio</title>
-    </head>
-    <body>
-        <h1>Ciao :(</h1>
-        <p>La tua uscita è stata registrata correttamente.</p>
-        <p>Sei rimasto/a in laboratorio per {ore:.2f} ore.</p>
-    </body>
-    </html>
-    """
+    emoji_dict = {
+        0: "😐",
+        1: "🙂",
+        2: "😜",
+        3: "😄",
+        4: "😌",
+        5: "😎"
+    }
+
+    with open("pages/uscita_lab.html") as f:
+        res = f.read().format(ore=ore, happy_hour_emoji=emoji_dict.get(int(ore), "🥹"))
     return HTMLResponse(content=res, status_code=200)
 
 

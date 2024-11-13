@@ -48,11 +48,25 @@ async def presenzaLab(x_email: str = Header(default=None)):
         with db_session:
             latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(desc(PresenzaLab.entrata)).first()
             if latest and latest.isActive:
-                latest.uscita = datetime.now()
                 return utils.orelab_uscita(utils.timedelta_to_hours(latest.duration))
             else:
-                latest = PresenzaLab(email=x_email, entrata=datetime.now())
                 return utils.orelab_entrata()
+
+
+@app.post("/presenzaLab/confirm", response_class=HTMLResponse, response_model=None)
+async def presenzaLab_confirm(x_email: str = Header(default=None)):
+    if not x_email:
+        raise HTTPException(status_code=400, detail="Missing authentication")
+
+    with oreLock:
+        with db_session:
+            latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(desc(PresenzaLab.entrata)).first()
+            if latest and latest.isActive:
+                latest.uscita = datetime.now()
+                return HTMLResponse(content="Uscita confermata.", status_code=200)
+            else:
+                latest = PresenzaLab(email=x_email, entrata=datetime.now())
+                return HTMLResponse(content="Entrata confermata.", status_code=200)
 
 
 if __name__ == "__main__":
