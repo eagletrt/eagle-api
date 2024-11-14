@@ -85,6 +85,9 @@ async def oreLab(username: str, filter: str="month") -> dict:
 
     with db_session:
         presenze = select(p for p in PresenzaLab if p.email == f"{username}@eagletrt.it")
+        latest = presenze.order_by(desc(PresenzaLab.entrata)).first()
+        inLab = latest and latest.isActive
+
         if filter == "month":
             presenze = presenze.filter(lambda p: p.entrata.month == datetime.now().month)
         elif filter == "year":
@@ -95,7 +98,11 @@ async def oreLab(username: str, filter: str="month") -> dict:
             presenze = presenze.filter(lambda p: p.entrata >= datetime.now() - timedelta(days=30))
         else:
             filter = "all" # default
-        return {"ore": sum([utils.timedelta_to_hours(p.duration) for p in list(presenze)]), "filter": filter}
+        return {
+            "ore": sum([utils.timedelta_to_hours(p.duration) for p in list(presenze)]),
+            "inlab": inLab,
+            "filter": filter
+        }
 
 
 if __name__ == "__main__":
