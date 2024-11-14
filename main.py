@@ -74,7 +74,8 @@ async def tecs_link_ore(x_email: str = Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
-    return RedirectResponse(url=f"https://t.me/ThonisNomasbot?start={x_email.split('@')[0]}", status_code=302)
+    username = x_email.split('@')[0].replace('.', '___')
+    return RedirectResponse(url=f"https://t.me/ThonisNomasbot?start={username}", status_code=302)
 
 
 @app.get("/oreLab")
