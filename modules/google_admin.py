@@ -32,8 +32,8 @@ class GoogleAdminAPI:
                 user_body = {
                     "primaryEmail": email,
                     "name": {
-                        "givenName": user.name,
-                        "familyName": user.surname
+                        "givenName": user.name.strip(),
+                        "familyName": user.surname.strip()
                     },
                     "password": temp_password,
                     "changePasswordAtNextLogin": True

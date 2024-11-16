@@ -5,9 +5,9 @@ db = Database("sqlite", "/data/oreLab.db", create_db=True)
 
 
 class PresenzaLab(db.Entity):
-    email = Required(str)
-    entrata = Required(datetime, default=datetime.now)
-    uscita = Optional(datetime)
+    email = Required(str, index="email_asc")
+    entrata = Required(datetime, default=datetime.now, index="entrata_desc")
+    uscita = Optional(datetime, index="uscita_desc")
     note = Optional(str)
 
     @property
