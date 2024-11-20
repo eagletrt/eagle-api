@@ -46,9 +46,17 @@ async def presenzaLab(x_email: str = Header(default=None)):
 
     with oreLock:
         with db_session:
-            latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(desc(PresenzaLab.entrata)).first()
+            presenze = select(p for p in PresenzaLab if p.email == x_email)
+            latest = presenze.order_by(desc(PresenzaLab.entrata)).first()
+            today = presenze.filter(
+                lambda p: p.entrata >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            )
+
+            ore = utils.timedelta_to_hours(latest.duration)
+            ore_oggi = sum([utils.timedelta_to_hours(p.duration) for p in list(today)])
+
             if latest and latest.isActive:
-                return utils.orelab_uscita(utils.timedelta_to_hours(latest.duration))
+                return utils.orelab_uscita(ore, ore_oggi)
             else:
                 return utils.orelab_entrata()
 
@@ -103,14 +111,16 @@ async def oreLab(username: str, filter: str="month") -> dict:
         now = datetime.now()
         today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        if filter == "month":
-            presenze = presenze.filter(lambda p: p.entrata.month == now.month and p.entrata.year == now.year)
-        elif filter == "year":
-            presenze = presenze.filter(lambda p: p.entrata.year == now.year)
+        if filter == "day":
+            presenze = presenze.filter(lambda p: p.entrata >= today)
         elif filter == "7d":
             presenze = presenze.filter(lambda p: p.entrata >= today - timedelta(days=7))
         elif filter == "30d":
             presenze = presenze.filter(lambda p: p.entrata >= today - timedelta(days=30))
+        elif filter == "month":
+            presenze = presenze.filter(lambda p: p.entrata.month == now.month and p.entrata.year == now.year)
+        elif filter == "year":
+            presenze = presenze.filter(lambda p: p.entrata.year == now.year)
         else:
             filter = "all" # default
         return {
