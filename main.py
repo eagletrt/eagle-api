@@ -69,6 +69,19 @@ async def presenzaLab_confirm(x_email: str = Header(default=None)):
                 return HTMLResponse(content="Entrata confermata.", status_code=200)
 
 
+@app.get("/presenzaLab/resetore")
+async def presenzaLab_resetore(x_email: str = Header(default=None)):
+    if not x_email:
+        raise HTTPException(status_code=400, detail="Missing authentication")
+
+    with oreLock:
+        with db_session:
+            latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(desc(PresenzaLab.entrata)).first()
+            if latest and latest.isActive:
+                latest.delete()
+                return RedirectResponse(url="https://api.eagletrt.it/api/v2/presenzaLab", status_code=302)
+
+
 @app.get("/tecsLinkOre")
 async def tecs_link_ore(x_email: str = Header(default=None)):
     if not x_email:

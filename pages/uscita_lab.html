@@ -38,6 +38,12 @@
             border-radius: 16px;
             cursor: pointer;
         }
+
+        #reset {
+            position: fixed;
+            bottom: 0;
+            margin: 20px;
+        }
     </style>
 </head>
 <body>
@@ -45,6 +51,8 @@
     <form method="POST" onsubmit="formSubmit(event)">
         <button type="submit">Esci dal Lab</button>
     </form>
+
+    <p id="reset">Hai dimenticato di firmare l'uscita? <a href="https://api.eagletrt.it/api/v2/presenzaLab/resetore">Reset ore</a></p>
 
     <script type="text/javascript">
         async function formSubmit(event) {
