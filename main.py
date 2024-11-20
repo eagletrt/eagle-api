@@ -87,15 +87,17 @@ async def oreLab(username: str, filter: str="month") -> dict:
         presenze = select(p for p in PresenzaLab if p.email == f"{username}@eagletrt.it")
         latest = presenze.order_by(desc(PresenzaLab.entrata)).first()
         inLab = latest and latest.isActive
+        now = datetime.now()
+        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         if filter == "month":
-            presenze = presenze.filter(lambda p: p.entrata.month == datetime.now().month)
+            presenze = presenze.filter(lambda p: p.entrata.month == now.month and p.entrata.year == now.year)
         elif filter == "year":
-            presenze = presenze.filter(lambda p: p.entrata.year == datetime.now().year)
+            presenze = presenze.filter(lambda p: p.entrata.year == now.year)
         elif filter == "7d":
-            presenze = presenze.filter(lambda p: p.entrata >= datetime.now().replace() - timedelta(days=7))
+            presenze = presenze.filter(lambda p: p.entrata >= today - timedelta(days=7))
         elif filter == "30d":
-            presenze = presenze.filter(lambda p: p.entrata >= datetime.now() - timedelta(days=30))
+            presenze = presenze.filter(lambda p: p.entrata >= today - timedelta(days=30))
         else:
             filter = "all" # default
         return {
