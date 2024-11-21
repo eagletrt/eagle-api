@@ -52,8 +52,8 @@ async def presenzaLab(x_email: str = Header(default=None)):
                 lambda p: p.entrata >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
             )
 
-            ore = utils.timedelta_to_hours(latest.duration)
-            ore_oggi = sum([utils.timedelta_to_hours(p.duration) for p in list(today)])
+            ore = utils.timedelta_to_hours(latest.duration) if latest else 0
+            ore_oggi = sum([utils.timedelta_to_hours(p.duration) for p in list(today)]) if latest else 0
 
             if latest and latest.isActive:
                 return utils.orelab_uscita(ore, ore_oggi)
