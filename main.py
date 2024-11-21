@@ -58,7 +58,7 @@ async def presenzaLab(x_email: str = Header(default=None)):
             if latest and latest.isActive:
                 return utils.orelab_uscita(ore, ore_oggi)
             else:
-                return utils.orelab_entrata()
+                return utils.orelab_entrata(ore_oggi)
 
 
 @app.post("/presenzaLab/confirm", response_class=HTMLResponse, response_model=None)

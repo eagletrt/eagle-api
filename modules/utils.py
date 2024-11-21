@@ -7,9 +7,11 @@ def get_eagletrt_email(email: str) -> str:
     return f"{username}@eagletrt.it"
 
 
-def orelab_entrata() -> HTMLResponse:
+def orelab_entrata(ore_oggi: float) -> HTMLResponse:
+    ore_oggi = str(round(ore_oggi, 2))
     with open("pages/entrata_lab.html") as f:
-        res = f.read()
+        res = f.read() \
+                .replace("{ore_oggi}", ore_oggi)
     return HTMLResponse(content=res, status_code=200)
 
 
