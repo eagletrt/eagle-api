@@ -150,8 +150,13 @@ async def leaderboardOre(filter: str="month") -> dict:
         else:
             filter = "all" # default
 
-        ore = select((p.email, sum(utils.timedelta_to_hours(p.duration))) for p in presenze).group_by(PresenzaLab.email)
-        ore = sorted(ore, key=lambda x: x[1], reverse=True)
+        ore = {}
+        for p in presenze:
+            if p.email not in ore:
+                ore[p.email] = 0
+            ore[p.email] += utils.timedelta_to_hours(p.duration)
+        ore = dict(sorted(ore.items(), key=lambda item: item[1], reverse=True))
+
         return {
             "leaderboard": ore,
             "filter": filter
