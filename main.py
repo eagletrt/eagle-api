@@ -130,6 +130,34 @@ async def oreLab(username: str, filter: str="month") -> dict:
         }
 
 
+@app.get("/leaderboardOre")
+async def leaderboardOre(filter: str="month") -> dict:
+    with db_session:
+        presenze = PresenzaLab.select()
+        now = datetime.now()
+        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        if filter == "day":
+            presenze = presenze.filter(lambda p: p.entrata >= today)
+        elif filter == "7d":
+            presenze = presenze.filter(lambda p: p.entrata >= today - timedelta(days=7))
+        elif filter == "30d":
+            presenze = presenze.filter(lambda p: p.entrata >= today - timedelta(days=30))
+        elif filter == "month":
+            presenze = presenze.filter(lambda p: p.entrata.month == now.month and p.entrata.year == now.year)
+        elif filter == "year":
+            presenze = presenze.filter(lambda p: p.entrata.year == now.year)
+        else:
+            filter = "all" # default
+
+        ore = select((p.email, sum(utils.timedelta_to_hours(p.duration))) for p in presenze).group_by(PresenzaLab.email)
+        ore = sorted(ore, key=lambda x: x[1], reverse=True)
+        return {
+            "leaderboard": ore,
+            "filter": filter
+        }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=settings.API_HOST, port=settings.API_PORT, root_path=settings.API_PATH)
