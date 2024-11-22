@@ -7,8 +7,20 @@ def get_eagletrt_email(email: str) -> str:
     return f"{username}@eagletrt.it"
 
 
+def timedelta_to_hours(td: timedelta) -> float:
+    return td.total_seconds() / 3600
+
+
+def pretty_time(hours: float) -> str:
+    int_hours = int(hours)
+    minutes = int((hours - int_hours) * 60)
+    if hours < 1:
+        return f"{minutes} minuti"
+    return f"{int_hours}h {minutes}min"
+
+
 def orelab_entrata(ore_oggi: float) -> HTMLResponse:
-    ore_oggi = str(round(ore_oggi, 2))
+    ore_oggi = pretty_time(ore_oggi)
     with open("pages/entrata_lab.html") as f:
         res = f.read() \
                 .replace("{ore_oggi}", ore_oggi)
@@ -25,8 +37,8 @@ def orelab_uscita(ore: float, ore_oggi: float) -> HTMLResponse:
         5: "😎"
     }
     emoji = emoji_dict.get(int(ore_oggi // 1), "🥹")
-    ore = str(round(ore, 2))
-    ore_oggi = str(round(ore_oggi, 2))
+    ore = pretty_time(ore)
+    ore_oggi = pretty_time(ore_oggi)
 
     with open("pages/uscita_lab.html") as f:
         res = f.read() \
@@ -34,7 +46,3 @@ def orelab_uscita(ore: float, ore_oggi: float) -> HTMLResponse:
                 .replace("{ore_oggi}", ore_oggi) \
                 .replace("{happy_hour_emoji}", emoji)
     return HTMLResponse(content=res, status_code=200)
-
-
-def timedelta_to_hours(td: timedelta) -> float:
-    return td.total_seconds() / 3600
