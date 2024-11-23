@@ -1,4 +1,6 @@
-from threading import Lock
+import schedule
+from time import sleep
+from threading import Lock, Thread
 from datetime import datetime, timedelta
 from pony.orm import db_session, desc, select
 from fastapi import FastAPI, HTTPException, Depends, Header
@@ -77,19 +79,6 @@ async def presenzaLab_confirm(x_email: str = Header(default=None)):
                 return HTMLResponse(content="Entrata confermata.", status_code=200)
 
 
-@app.get("/presenzaLab/resetore")
-async def presenzaLab_resetore(x_email: str = Header(default=None)):
-    if not x_email:
-        raise HTTPException(status_code=400, detail="Missing authentication")
-
-    with oreLock:
-        with db_session:
-            latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(desc(PresenzaLab.entrata)).first()
-            if latest and latest.isActive:
-                latest.delete()
-                return RedirectResponse(url="https://api.eagletrt.it/api/v2/presenzaLab", status_code=302)
-
-
 @app.get("/tecsLinkOre")
 async def tecs_link_ore(x_email: str = Header(default=None)):
     if not x_email:
@@ -163,6 +152,20 @@ async def leaderboardOre(filter: str="month") -> dict:
         }
 
 
+def deleteActivePresenze():
+    with oreLock:
+        with db_session:
+            PresenzaLab.select(lambda p: p.isActive).delete(bulk=True)
+
+
+def run_schedules():
+    while True:
+        schedule.run_pending()
+        sleep(1)
+
+
 if __name__ == "__main__":
     import uvicorn
+    schedule.every().day.at("04:00").do(deleteActivePresenze)
+    Thread(target=run_schedules, daemon=True).start()
     uvicorn.run(app, host=settings.API_HOST, port=settings.API_PORT, root_path=settings.API_PATH)
