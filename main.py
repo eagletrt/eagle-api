@@ -152,6 +152,13 @@ async def leaderboardOre(filter: str="month") -> dict:
         }
 
 
+@app.get("/inlab")
+async def inlab() -> dict:
+    with db_session:
+        in_lab = select(p.email for p in PresenzaLab if p.isActive)
+        return {"inlab": list(in_lab)}
+
+
 def deleteActivePresenze():
     with oreLock:
         with db_session:
