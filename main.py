@@ -41,8 +41,8 @@ async def list_user_groups(email: str) -> list[str]:
     return google.list_user_groups(email)
 
 
-@app.get("/presenzaLab", response_class=HTMLResponse, response_model=None)
-async def presenzaLab(x_email: str = Header(default=None)):
+@app.get("/lab/presenza", response_class=HTMLResponse, response_model=None)
+async def lab_presenza(x_email: str = Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
@@ -63,8 +63,8 @@ async def presenzaLab(x_email: str = Header(default=None)):
                 return utils.orelab_entrata(ore_oggi)
 
 
-@app.post("/presenzaLab/confirm", response_class=HTMLResponse, response_model=None)
-async def presenzaLab_confirm(x_email: str = Header(default=None)):
+@app.post("/lab/presenza/confirm", response_class=HTMLResponse, response_model=None)
+async def lab_presenza_confirm(x_email: str = Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
@@ -88,8 +88,8 @@ async def tecs_link_ore(x_email: str = Header(default=None)):
     return RedirectResponse(url=f"https://t.me/ThonisNomasbot?start={username}", status_code=302)
 
 
-@app.get("/oreLab")
-async def oreLab(username: str, filter: str="month") -> dict:
+@app.get("/lab/ore")
+async def lab_ore(username: str, filter: str="month") -> dict:
     if not username:
         raise HTTPException(status_code=400, detail="Missing username")
 
@@ -119,8 +119,8 @@ async def oreLab(username: str, filter: str="month") -> dict:
         }
 
 
-@app.get("/leaderboardOre")
-async def leaderboardOre(filter: str="month") -> dict:
+@app.get("/lab/leaderboard")
+async def lab_leaderboard(filter: str="month") -> dict:
     with db_session:
         presenze = PresenzaLab.select()
         now = datetime.now()
@@ -152,8 +152,8 @@ async def leaderboardOre(filter: str="month") -> dict:
         }
 
 
-@app.get("/inlab")
-async def inlab() -> dict:
+@app.get("/lab/inlab")
+async def lab_inlab() -> dict:
     with db_session:
         in_lab = select(p.email for p in PresenzaLab if p.isActive)
         return {"inlab": list(in_lab)}
