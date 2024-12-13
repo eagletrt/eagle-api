@@ -76,6 +76,7 @@ async def lab_presenza_confirm(x_email: str = Header(default=None)):
                 return HTMLResponse(content="Uscita confermata.", status_code=200)
             else:
                 latest = PresenzaLab(email=x_email, entrata=datetime.now())
+                utils.notify_telegram(settings.LOG_CHAT_ID, f"➡️ {x_email} è entrato in lab")
                 return HTMLResponse(content="Entrata confermata.", status_code=200)
 
 

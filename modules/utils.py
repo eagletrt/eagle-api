@@ -1,5 +1,7 @@
+import requests
 from datetime import timedelta
 from fastapi.responses import HTMLResponse
+from modules import settings
 
 
 def get_eagletrt_email(email: str) -> str:
@@ -46,3 +48,15 @@ def orelab_uscita(ore: float, ore_oggi: float) -> HTMLResponse:
                 .replace("{ore_oggi}", ore_oggi) \
                 .replace("{happy_hour_emoji}", emoji)
     return HTMLResponse(content=res, status_code=200)
+
+
+def notify_telegram(chatId: int, message: str):
+    if chatId == 0: return
+
+    url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage"
+    data = {
+        "chat_id": chatId,
+        "text": message,
+        "parse_mode": "HTML"
+    }
+    requests.post(url, data=data)
