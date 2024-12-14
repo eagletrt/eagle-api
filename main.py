@@ -74,11 +74,11 @@ async def lab_presenza_confirm(x_email: str = Header(default=None)):
             if latest and latest.isActive:
                 latest.uscita = datetime.now()
                 duration = utils.pretty_time(utils.timedelta_to_hours(latest.duration))
-                utils.notify_telegram(settings.LOG_CHAT_ID, f"💔 {x_email} è uscito dal lab ({duration})")
+                utils.notify_telegram(settings.LOG_CHAT_ID, f"💔 {x_email} è uscit* dal lab ({duration})")
                 return HTMLResponse(content="Uscita confermata.", status_code=200)
             else:
                 latest = PresenzaLab(email=x_email, entrata=datetime.now())
-                utils.notify_telegram(settings.LOG_CHAT_ID, f"🎉 {x_email} è entrato in lab")
+                utils.notify_telegram(settings.LOG_CHAT_ID, f"🎉 {x_email} è entrat* in lab")
                 return HTMLResponse(content="Entrata confermata.", status_code=200)
 
 
