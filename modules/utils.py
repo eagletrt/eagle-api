@@ -50,12 +50,16 @@ def orelab_uscita(ore: float, ore_oggi: float) -> HTMLResponse:
     return HTMLResponse(content=res, status_code=200)
 
 
-def notify_telegram(chatId: int, message: str):
-    if chatId == 0: return
+def notify_telegram(message: str):
+    chatId = settings.LOG_CHAT_ID
+    topicId = settings.LOG_TOPIC_ID
+    if chatId == 0 or topicId == 0:
+        return
 
     url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage"
     data = {
         "chat_id": chatId,
+        "message_thread_id": topicId,
         "text": message,
         "parse_mode": "HTML"
     }

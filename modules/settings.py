@@ -6,6 +6,7 @@ API_PATH: str = os.getenv("API_PATH", "")
 BEARER_TOKEN: str = os.getenv("BEARER_TOKEN")
 BOT_TOKEN: str = os.getenv("BOT_TOKEN")
 LOG_CHAT_ID: int = int(os.getenv("LOG_CHAT_ID", 0))
+LOG_TOPIC_ID: int = int(os.getenv("LOG_TOPIC_ID", 0))
 
 GOOGLE_SERVICE_ACCOUNT_JSON: str = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
 GOOGLE_IMPERSONATE_ADMIN_EMAIL: str = os.getenv("GOOGLE_IMPERSONATE_ADMIN_EMAIL")
