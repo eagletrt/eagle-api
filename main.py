@@ -104,17 +104,21 @@ async def lab_ore(username: str, filter: str="month") -> dict:
         today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         if filter == "day":
-            presenze = presenze.filter(lambda p: p.entrata >= today)
-        elif filter == "7d":
-            presenze = presenze.filter(lambda p: p.entrata >= today - timedelta(days=7))
-        elif filter == "30d":
-            presenze = presenze.filter(lambda p: p.entrata >= today - timedelta(days=30))
+            flt = lambda p: p.entrata >= today
         elif filter == "month":
-            presenze = presenze.filter(lambda p: p.entrata.month == now.month and p.entrata.year == now.year)
+            flt = lambda p: p.entrata.month == now.month and p.entrata.year == now.year
+        elif filter == "lastmonth":
+            if now.month == 1:
+                flt = lambda p: p.entrata.month == 12 and p.entrata.year == now.year - 1
+            else:
+                flt = lambda p: p.entrata.month == now.month - 1 and p.entrata.year == now.year
         elif filter == "year":
-            presenze = presenze.filter(lambda p: p.entrata.year == now.year)
+            flt = lambda p: p.entrata.year == now.year
         else:
             filter = "all" # default
+            flt = lambda p: True
+
+        presenze = presenze.filter(flt)
         return {
             "ore": sum([utils.timedelta_to_hours(p.duration) for p in list(presenze)]),
             "inlab": inLab,
@@ -130,18 +134,21 @@ async def lab_leaderboard(filter: str="month") -> dict:
         today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         if filter == "day":
-            presenze = presenze.filter(lambda p: p.entrata >= today)
-        elif filter == "7d":
-            presenze = presenze.filter(lambda p: p.entrata >= today - timedelta(days=7))
-        elif filter == "30d":
-            presenze = presenze.filter(lambda p: p.entrata >= today - timedelta(days=30))
+            flt = lambda p: p.entrata >= today
         elif filter == "month":
-            presenze = presenze.filter(lambda p: p.entrata.month == now.month and p.entrata.year == now.year)
+            flt = lambda p: p.entrata.month == now.month and p.entrata.year == now.year
+        elif filter == "lastmonth":
+            if now.month == 1:
+                flt = lambda p: p.entrata.month == 12 and p.entrata.year == now.year - 1
+            else:
+                flt = lambda p: p.entrata.month == now.month - 1 and p.entrata.year == now.year
         elif filter == "year":
-            presenze = presenze.filter(lambda p: p.entrata.year == now.year)
+            flt = lambda p: p.entrata.year == now.year
         else:
-            filter = "all" # default
+            filter = "all"  # default
+            flt = lambda p: True
 
+        presenze = presenze.filter(flt)
         ore = {}
         for p in presenze:
             if p.email not in ore:
