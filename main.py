@@ -5,8 +5,8 @@ from threading import Lock, Thread
 from feedgen.feed import FeedGenerator
 from datetime import datetime, timedelta
 from pony.orm import db_session, desc, select
-from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import FastAPI, HTTPException, Depends, Header, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from modules import settings, utils
 from modules.db_ore import PresenzaLab
@@ -172,7 +172,7 @@ async def lab_inlab() -> dict:
 
 
 @app.get("/lab/rss")
-async def lab_rss(limit: int=20) -> str:
+async def lab_rss(limit: int=20):
     with db_session:
         presenze = PresenzaLab.select().order_by(desc(PresenzaLab.entrata)).limit(limit)
 
@@ -190,7 +190,7 @@ async def lab_rss(limit: int=20) -> str:
             fe.title(f"{p.email} has entered the lab")
             fe.pubdate(p.entrata.replace(tzinfo=ZoneInfo("Europe/Rome")))
 
-        return fg.rss_str(pretty=True)
+        return Response(content=fg.rss_str(pretty=True), media_type="application/rss+xml")
 
 
 def deleteActivePresenze():
