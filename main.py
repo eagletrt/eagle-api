@@ -1,9 +1,7 @@
 import schedule
 from time import sleep
-from zoneinfo import ZoneInfo
+from datetime import datetime
 from threading import Lock, Thread
-from feedgen.feed import FeedGenerator
-from datetime import datetime, timedelta
 from pony.orm import db_session, desc, select
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import FastAPI, HTTPException, Depends, Header, Response
@@ -75,12 +73,11 @@ async def lab_presenza_confirm(x_email: str = Header(default=None)):
             latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(desc(PresenzaLab.entrata)).first()
             if latest and latest.isActive:
                 latest.uscita = datetime.now()
-                duration = utils.pretty_time(utils.timedelta_to_hours(latest.duration))
-                utils.notify_telegram(f"💔 {x_email} è uscit* dal lab ({duration})")
+                utils.notify_exit(latest)
                 return HTMLResponse(content="Uscita confermata.", status_code=200)
             else:
                 latest = PresenzaLab(email=x_email, entrata=datetime.now())
-                utils.notify_telegram(f"🎉 {x_email} è entrat* in lab")
+                utils.notify_entry(latest)
                 return HTMLResponse(content="Entrata confermata.", status_code=200)
 
 
@@ -172,25 +169,8 @@ async def lab_inlab() -> dict:
 
 
 @app.get("/lab/rss")
-async def lab_rss(limit: int=20):
-    with db_session:
-        presenze = PresenzaLab.select().order_by(desc(PresenzaLab.entrata)).limit(limit)
-
-        fg = FeedGenerator()
-        fg.title("Entrate Lab")
-        fg.link(href="https://api.eagletrt.it/api/v2/lab/rss", rel="self")
-        fg.description("Feed RSS of E-Agle TRT Lab Entrances")
-
-        for p in presenze:
-            if not p.isActive:
-                fe = fg.add_entry()
-                fe.title(f"{p.email} has exited the lab")
-                fe.pubdate(p.uscita.replace(tzinfo=ZoneInfo("Europe/Rome")))
-            fe = fg.add_entry()
-            fe.title(f"{p.email} has entered the lab")
-            fe.pubdate(p.entrata.replace(tzinfo=ZoneInfo("Europe/Rome")))
-
-        return Response(content=fg.rss_str(pretty=True), media_type="application/rss+xml")
+async def lab_rss():
+    return Response(content=utils.rss_feed.rss_str(pretty=True), media_type="application/rss+xml")
 
 
 def deleteActivePresenze():
