@@ -81,7 +81,7 @@ def notify_entry(presenza: PresenzaLab):
     notify_telegram(msg)
     fe = rss_feed.add_entry()
     fe.title(msg)
-    fe.pubdate(presenza.uscita.replace(tzinfo=ZoneInfo("Europe/Rome")))
+    fe.pubdate(presenza.entrata.replace(tzinfo=ZoneInfo("Europe/Rome")))
 
 
 def notify_exit(presenza: PresenzaLab):
