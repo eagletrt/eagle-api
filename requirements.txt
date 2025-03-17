@@ -5,3 +5,4 @@ protobuf~=3.20.3
 google-api-python-client~=2.149.0
 pony~=0.7.17
 schedule~=1.2.2
+feedgen~=1.0.0

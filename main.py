@@ -1,6 +1,7 @@
 import schedule
 from time import sleep
 from threading import Lock, Thread
+from feedgen.feed import FeedGenerator
 from datetime import datetime, timedelta
 from pony.orm import db_session, desc, select
 from fastapi import FastAPI, HTTPException, Depends, Header
@@ -167,6 +168,28 @@ async def lab_inlab() -> dict:
     with db_session:
         in_lab = select(p.email for p in PresenzaLab if p.isActive)
         return {"inlab": list(in_lab)}
+
+
+@app.get("/lab/rss")
+async def lab_rss(limit: int=20) -> str:
+    with db_session:
+        presenze = PresenzaLab.select().sort_by(lambda p: p.entrata, reverse=True).limit(limit)
+
+        fg = FeedGenerator()
+        fg.title("Entrate Lab")
+        fg.link(href="https://api.eagletrt.it/api/v2/lab/rss", rel="self")
+        fg.description("Feed RSS of E-Agle TRT Lab Entrances")
+
+        for p in presenze:
+            if not p.isActive:
+                fe = fg.add_entry()
+                fe.title(f"{p.email} has exited the lab")
+                fe.pubdate(p.uscita)
+            fe = fg.add_entry()
+            fe.title(f"{p.email} has entered the lab")
+            fe.pubdate(p.entrata)
+
+        return fg.rss_str(pretty=True)
 
 
 def deleteActivePresenze():
