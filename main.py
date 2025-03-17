@@ -1,5 +1,6 @@
 import schedule
 from time import sleep
+from zoneinfo import ZoneInfo
 from threading import Lock, Thread
 from feedgen.feed import FeedGenerator
 from datetime import datetime, timedelta
@@ -184,10 +185,10 @@ async def lab_rss(limit: int=20) -> str:
             if not p.isActive:
                 fe = fg.add_entry()
                 fe.title(f"{p.email} has exited the lab")
-                fe.pubdate(p.uscita)
+                fe.pubdate(p.uscita.replace(tzinfo=ZoneInfo("Europe/Rome")))
             fe = fg.add_entry()
             fe.title(f"{p.email} has entered the lab")
-            fe.pubdate(p.entrata)
+            fe.pubdate(p.entrata.replace(tzinfo=ZoneInfo("Europe/Rome")))
 
         return fg.rss_str(pretty=True)
 
