@@ -173,7 +173,7 @@ async def lab_inlab() -> dict:
 @app.get("/lab/rss")
 async def lab_rss(limit: int=20) -> str:
     with db_session:
-        presenze = PresenzaLab.select().sort_by(lambda p: p.entrata, reverse=True).limit(limit)
+        presenze = PresenzaLab.select().order_by(desc(PresenzaLab.entrata)).limit(limit)
 
         fg = FeedGenerator()
         fg.title("Entrate Lab")
