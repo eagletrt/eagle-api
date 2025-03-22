@@ -165,7 +165,10 @@ async def lab_leaderboard(filter: str="month") -> dict:
 async def lab_inlab() -> dict:
     with db_session:
         in_lab = select(p.email for p in PresenzaLab if p.isActive)
-        return {"inlab": list(in_lab)}
+        return {
+            "count": len(in_lab),
+            "people": list(in_lab)
+        }
 
 
 @app.get("/lab/rss")
