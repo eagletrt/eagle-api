@@ -113,6 +113,12 @@ async def lab_ore(username: str, filter: str="month") -> dict:
                 flt = lambda p: p.entrata.month == now.month - 1 and p.entrata.year == now.year
         elif filter == "year":
             flt = lambda p: p.entrata.year == now.year
+        elif filter.startswith("since-"):
+            try:
+                since = datetime.strptime(filter[6:], "%Y-%m-%d")
+                flt = lambda p: p.entrata >= since
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
         else:
             filter = "all" # default
             flt = lambda p: True
@@ -143,6 +149,12 @@ async def lab_leaderboard(filter: str="month") -> dict:
                 flt = lambda p: p.entrata.month == now.month - 1 and p.entrata.year == now.year
         elif filter == "year":
             flt = lambda p: p.entrata.year == now.year
+        elif filter.startswith("since-"):
+            try:
+                since = datetime.strptime(filter[6:], "%Y-%m-%d")
+                flt = lambda p: p.entrata >= since
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
         else:
             filter = "all"  # default
             flt = lambda p: True
