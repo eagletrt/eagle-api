@@ -1,9 +1,5 @@
 from google.oauth2 import service_account
 from googleapiclient import discovery, errors
-from modules import utils
-from modules.models import AirtableUser, AirtableTeam
-
-AIRTABLE_TO_GOOGLE_TEAM_MAPPING = {}
 
 
 class GoogleAdminAPI:
@@ -18,8 +14,8 @@ class GoogleAdminAPI:
         delegated_credentials = credentials.with_subject(impersonate_admin_email)
         self._service = discovery.build('admin', 'directory_v1', credentials=delegated_credentials)
 
-    def try_create_new_user(self, user: AirtableUser, temp_password: str) -> dict:
-        email = utils.get_eagletrt_email(user.email)
+    def try_create_new_user(self, user: dict, temp_password: str) -> dict:
+        email = user["Team Email"]
 
         try:
             google_user = self._service.users().get(userKey=email).execute()
@@ -32,17 +28,17 @@ class GoogleAdminAPI:
                 user_body = {
                     "primaryEmail": email,
                     "name": {
-                        "givenName": user.name.strip(),
-                        "familyName": user.surname.strip()
+                        "givenName": user["Name"].strip(),
+                        "familyName": user["Surname"].strip()
                     },
                     "password": temp_password,
                     "changePasswordAtNextLogin": True
                 }
                 google_user = self._service.users().insert(body=user_body).execute()
-                self._add_user_to_group(email, "members@groups.eagletrt.it")
+                self.add_user_to_group(email, "members@groups.eagletrt.it")
                 return google_user
 
-    def _add_user_to_group(self, user_email: str, group_email: str):
+    def add_user_to_group(self, user_email: str, group_email: str):
         try:
             result = self._service.members().insert(
                 groupKey=group_email,
@@ -53,11 +49,6 @@ class GoogleAdminAPI:
             error = e.error_details[0]
             if error['reason'] == 'duplicate':
                 return f"User {user_email} is already in group {group_email}"
-
-    def add_user_to_team(self, user: AirtableUser, team: AirtableTeam):
-        user_email = utils.get_eagletrt_email(user.email)
-        group_email = AIRTABLE_TO_GOOGLE_TEAM_MAPPING[team.name]
-        return self._add_user_to_group(user_email, group_email)
 
     def list_all_users(self) -> list[str]:
         try:

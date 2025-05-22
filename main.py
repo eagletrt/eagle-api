@@ -25,10 +25,10 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Invalid or missing token")
 
 
-@app.post("/updateUsers", dependencies=[Depends(verify_token)])
-async def update_users(data: UserUpdates) -> dict:
+@app.post("/newMember", dependencies=[Depends(verify_token)])
+async def new_member(data: dict) -> dict:
     existing_users = google.list_all_users()
-    to_create = [u for u in data.users if utils.get_eagletrt_email(u.email) not in existing_users]
+    to_create = [u for u in data["data"]["rows"] if u["Team Email"] not in existing_users]
 
     for user in to_create:
         google.try_create_new_user(user, settings.GOOGLE_NEW_USER_PASSWORD)
