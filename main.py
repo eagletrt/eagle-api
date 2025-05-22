@@ -8,7 +8,6 @@ from fastapi import FastAPI, HTTPException, Depends, Header, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from modules import settings, utils
 from modules.db_ore import PresenzaLab
-from modules.models import UserUpdates
 from modules.google_admin import GoogleAdminAPI
 
 app = FastAPI()
