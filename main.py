@@ -9,6 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from modules import settings, utils
 from modules.db_ore import PresenzaLab
 from modules.google_admin import GoogleAdminAPI
+from modules.nocodb import NocoDB
 
 app = FastAPI()
 security = HTTPBearer()
@@ -16,6 +17,10 @@ oreLock = Lock()
 google = GoogleAdminAPI(
     service_account_json=settings.GOOGLE_SERVICE_ACCOUNT_JSON,
     impersonate_admin_email=settings.GOOGLE_IMPERSONATE_ADMIN_EMAIL
+)
+nocodb = NocoDB(
+    base_url="https://nocodb.eagletrt.it",
+    api_key=settings.NOCODB_API_TOKEN
 )
 
 
@@ -185,6 +190,13 @@ async def lab_inlab() -> dict:
 @app.get("/lab/rss")
 async def lab_rss():
     return Response(content=utils.rss_feed.rss_str(pretty=True), media_type="application/rss+xml")
+
+
+@app.get("/website/sponsors")
+async def website_sponsors():
+    return {
+        "sponsors": nocodb.sponsors()
+    }
 
 
 def deleteActivePresenze():

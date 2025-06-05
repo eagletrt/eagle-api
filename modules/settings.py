@@ -7,6 +7,7 @@ BEARER_TOKEN: str = os.getenv("BEARER_TOKEN")
 BOT_TOKEN: str = os.getenv("BOT_TOKEN")
 LOG_CHAT_ID: int = int(os.getenv("LOG_CHAT_ID", 0))
 LOG_TOPIC_ID: int = int(os.getenv("LOG_TOPIC_ID", 0))
+NOCODB_API_TOKEN: str = os.getenv("NOCODB_API_TOKEN")
 
 GOOGLE_SERVICE_ACCOUNT_JSON: str = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
 GOOGLE_IMPERSONATE_ADMIN_EMAIL: str = os.getenv("GOOGLE_IMPERSONATE_ADMIN_EMAIL")
@@ -22,3 +23,5 @@ if not GOOGLE_IMPERSONATE_ADMIN_EMAIL:
     raise EnvironmentError("GOOGLE_IMPERSONATE_ADMIN_EMAIL environment variable is not set")
 if not GOOGLE_NEW_USER_PASSWORD:
     raise EnvironmentError("GOOGLE_NEW_USER_PASSWORD environment variable is not set")
+if not NOCODB_API_TOKEN:
+    raise EnvironmentError("NOCODB_API_TOKEN environment variable is not set")

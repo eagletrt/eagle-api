@@ -37,6 +37,7 @@ class GoogleAdminAPI:
                 google_user = self._service.users().insert(body=user_body).execute()
                 self.add_user_to_group(email, "members@groups.eagletrt.it")
                 return google_user
+            return None
 
     def add_user_to_group(self, user_email: str, group_email: str):
         try:
@@ -49,6 +50,7 @@ class GoogleAdminAPI:
             error = e.error_details[0]
             if error['reason'] == 'duplicate':
                 return f"User {user_email} is already in group {group_email}"
+            return None
 
     def list_all_users(self) -> list[str]:
         try:
