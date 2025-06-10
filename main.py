@@ -3,13 +3,14 @@ from time import sleep
 from datetime import datetime
 from threading import Lock, Thread
 from pony.orm import db_session, desc, select
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import FastAPI, HTTPException, Depends, Header, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from modules.nocodb import NocoDB
 from modules import settings, utils
 from modules.db_ore import PresenzaLab
 from modules.google_admin import GoogleAdminAPI
-from modules.nocodb import NocoDB
 
 app = FastAPI()
 security = HTTPBearer()
@@ -21,6 +22,15 @@ google = GoogleAdminAPI(
 nocodb = NocoDB(
     base_url="https://nocodb.eagletrt.it",
     api_key=settings.NOCODB_API_TOKEN
+)
+
+# Fix CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"]
 )
 
 
