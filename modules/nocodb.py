@@ -25,7 +25,7 @@ class NocoDB:
             } for item in items
         ]
 
-    def active_members(self) -> list[dict]:
+    def active_members(self) -> list[str]:
         res = self._session.get(f"{self.base_url}/api/v2/tables/m3rsrrmnhhxxw0p/records", params={
             "limit": 1000,
             "viewId": "vw72nyx0bmaak96s",
@@ -33,4 +33,4 @@ class NocoDB:
         })
         items = res.json().get("list")
 
-        return items
+        return [item["Full Name"] for item in items]
