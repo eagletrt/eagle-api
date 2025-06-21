@@ -198,7 +198,11 @@ async def website_sponsors():
 
 def deleteActivePresenze():
     with db_session:
-        PresenzaLab.select(lambda p: p.isActive).delete(bulk=True)
+        to_delete = PresenzaLab.select(lambda p: p.isActive)
+        for p in to_delete:
+            p.uscita = datetime.now()
+            p.isValid = False
+            p.note = "Closed due to inactivity"
 
 
 def run_schedules():
