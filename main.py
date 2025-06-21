@@ -1,11 +1,11 @@
 import schedule
 from time import sleep
+from threading import Thread
 from datetime import datetime
-from threading import Lock, Thread
 from pony.orm import db_session, desc, select
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi import FastAPI, HTTPException, Depends, Header, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from modules.nocodb import NocoDB
 from modules import settings, utils
@@ -14,7 +14,6 @@ from modules.google_admin import GoogleAdminAPI
 
 app = FastAPI()
 security = HTTPBearer()
-oreLock = Lock()
 google = GoogleAdminAPI(
     service_account_json=settings.GOOGLE_SERVICE_ACCOUNT_JSON,
     impersonate_admin_email=settings.GOOGLE_IMPERSONATE_ADMIN_EMAIL
@@ -50,31 +49,25 @@ async def new_member(data: dict) -> dict:
     return {"status": "success", "message": f"{len(to_create)} users created successfully"}
 
 
-@app.get("/userGroups", dependencies=[Depends(verify_token)])
-async def list_user_groups(email: str) -> list[str]:
-    return google.list_user_groups(email)
-
-
 @app.get("/lab/presenza", response_class=HTMLResponse, response_model=None)
 async def lab_presenza(x_email: str = Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
-    with oreLock:
-        with db_session:
-            presenze = select(p for p in PresenzaLab if p.email == x_email)
-            latest = presenze.order_by(desc(PresenzaLab.entrata)).first()
-            today = presenze.filter(
-                lambda p: p.entrata >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            )
+    with db_session:
+        presenze = select(p for p in PresenzaLab if p.email == x_email)
+        latest = presenze.order_by(desc(PresenzaLab.entrata)).first()
+        today = presenze.filter(
+            lambda p: p.entrata >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        )
 
-            ore = utils.timedelta_to_hours(latest.duration) if latest else 0
-            ore_oggi = sum([utils.timedelta_to_hours(p.duration) for p in list(today)]) if latest else 0
+        ore = utils.timedelta_to_hours(latest.duration) if latest else 0
+        ore_oggi = sum([utils.timedelta_to_hours(p.duration) for p in list(today)]) if latest else 0
 
-            if latest and latest.isActive:
-                return utils.orelab_uscita(ore, ore_oggi)
-            else:
-                return utils.orelab_entrata(ore_oggi)
+        if latest and latest.isActive:
+            return utils.orelab_uscita(ore, ore_oggi)
+        else:
+            return utils.orelab_entrata(ore_oggi)
 
 
 @app.post("/lab/presenza/confirm", response_class=HTMLResponse, response_model=None)
@@ -82,17 +75,16 @@ async def lab_presenza_confirm(x_email: str = Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
-    with oreLock:
-        with db_session:
-            latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(desc(PresenzaLab.entrata)).first()
-            if latest and latest.isActive:
-                latest.uscita = datetime.now()
-                utils.notify_exit(latest)
-                return HTMLResponse(content="Uscita confermata.", status_code=200)
-            else:
-                latest = PresenzaLab(email=x_email, entrata=datetime.now())
-                utils.notify_entry(latest)
-                return HTMLResponse(content="Entrata confermata.", status_code=200)
+    with db_session:
+        latest = PresenzaLab.select(lambda p: p.email == x_email).order_by(desc(PresenzaLab.entrata)).first()
+        if latest and latest.isActive:
+            latest.uscita = datetime.now()
+            utils.notify_exit(latest)
+            return HTMLResponse(content="Uscita confermata.", status_code=200)
+        else:
+            latest = PresenzaLab(email=x_email, entrata=datetime.now())
+            utils.notify_entry(latest)
+            return HTMLResponse(content="Entrata confermata.", status_code=200)
 
 
 @app.get("/tecsLinkOre")
@@ -197,11 +189,6 @@ async def lab_inlab() -> dict:
         }
 
 
-@app.get("/lab/rss")
-async def lab_rss():
-    return Response(content=utils.rss_feed.rss_str(pretty=True), media_type="application/rss+xml")
-
-
 @app.get("/website/sponsors")
 async def website_sponsors():
     return {
@@ -210,15 +197,14 @@ async def website_sponsors():
 
 
 def deleteActivePresenze():
-    with oreLock:
-        with db_session:
-            PresenzaLab.select(lambda p: p.isActive).delete(bulk=True)
+    with db_session:
+        PresenzaLab.select(lambda p: p.isActive).delete(bulk=True)
 
 
 def run_schedules():
     while True:
         schedule.run_pending()
-        sleep(1)
+        sleep(10)
 
 
 if __name__ == "__main__":

@@ -1,16 +1,8 @@
 import requests
-from zoneinfo import ZoneInfo
 from datetime import timedelta
-from feedgen.feed import FeedGenerator
 from fastapi.responses import HTMLResponse
 from modules import settings
 from modules.db_ore import PresenzaLab
-
-# RSS Feed
-rss_feed = FeedGenerator()
-rss_feed.title("Entrate Lab")
-rss_feed.link(href="https://api.eagletrt.it/api/v2/lab/rss", rel="self")
-rss_feed.description("Feed RSS of E-Agle TRT Lab Entrances")
 
 
 def get_eagletrt_email(email: str) -> str:
@@ -77,18 +69,10 @@ def notify_telegram(message: str):
 
 def notify_entry(presenza: PresenzaLab):
     msg = f"🎉 {presenza.email} has entered the lab"
-
     notify_telegram(msg)
-    fe = rss_feed.add_entry()
-    fe.title(msg)
-    fe.pubdate(presenza.entrata.replace(tzinfo=ZoneInfo("Europe/Rome")))
 
 
 def notify_exit(presenza: PresenzaLab):
     pretty_duration = pretty_time(timedelta_to_hours(presenza.duration))
     msg = f"💔 {presenza.email} has exited the lab ({pretty_duration})"
-
     notify_telegram(msg)
-    fe = rss_feed.add_entry()
-    fe.title(msg)
-    fe.pubdate(presenza.uscita.replace(tzinfo=ZoneInfo("Europe/Rome")))
