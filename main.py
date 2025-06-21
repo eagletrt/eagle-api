@@ -196,6 +196,13 @@ async def website_sponsors():
     }
 
 
+@app.get("/website/members")
+async def website_members():
+    return {
+        "members": nocodb.active_members()
+    }
+
+
 def deleteActivePresenze():
     with db_session:
         to_delete = PresenzaLab.select(lambda p: p.isActive)
