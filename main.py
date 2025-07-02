@@ -1,7 +1,7 @@
 import schedule
 from time import sleep
 from threading import Thread
-from datetime import datetime
+from datetime import datetime, timedelta
 from pony.orm import db_session, desc, select
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends, Header
@@ -97,86 +97,48 @@ async def tecs_link_ore(x_email: str = Header(default=None)):
 
 
 @app.get("/lab/ore")
-async def lab_ore(username: str, filter: str="month") -> dict:
+async def lab_ore(username: str) -> dict:
     if not username:
         raise HTTPException(status_code=400, detail="Missing username")
 
+    now = datetime.now()
     with db_session:
-        presenze = select(p for p in PresenzaLab if p.email == f"{username}@eagletrt.it")
+        presenze = PresenzaLab.select(lambda p: p.email == f"{username}@eagletrt.it")
         latest = presenze.order_by(desc(PresenzaLab.entrata)).first()
         inLab = latest and latest.isActive
-        now = datetime.now()
-        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        if filter == "day":
-            flt = lambda p: p.entrata >= today
-        elif filter == "month":
-            flt = lambda p: p.entrata.month == now.month and p.entrata.year == now.year
-        elif filter == "lastmonth":
-            if now.month == 1:
-                flt = lambda p: p.entrata.month == 12 and p.entrata.year == now.year - 1
-            else:
-                flt = lambda p: p.entrata.month == now.month - 1 and p.entrata.year == now.year
-        elif filter == "year":
-            flt = lambda p: p.entrata.year == now.year
-        elif filter.startswith("since-"):
-            try:
-                since = datetime.strptime(filter[6:], "%Y-%m-%d")
-                flt = lambda p: p.entrata >= since
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
-        else:
-            filter = "all" # default
-            flt = lambda p: True
-
-        presenze = presenze.filter(flt)
+        presenze = presenze.filter(lambda p: p.entrata.month == now.month and p.entrata.year == now.year)
         return {
             "ore": sum([utils.timedelta_to_hours(p.duration) for p in list(presenze)]),
-            "inlab": inLab,
-            "filter": filter
+            "inlab": inLab
         }
 
 
 @app.get("/lab/leaderboard")
-async def lab_leaderboard(filter: str="month") -> dict:
+async def lab_leaderboard(since: str, until: str) -> dict:
+    now = datetime.now()
+    if not since:
+        since = now.strftime("%Y-%m-01") # default to the first day of the current month
+    if not until:
+        until = now.strftime("%Y-%m-%d") # default to today
+
+    try:
+        since_date = datetime.strptime(since, "%Y-%m-%d")
+        until_date = datetime.strptime(until, "%Y-%m-%d")
+        until_date += timedelta(days=1) # Include the entire end date
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format(s). Use YYYY-MM-DD.")
+
     with db_session:
-        presenze = PresenzaLab.select()
-        now = datetime.now()
-        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-
-        if filter == "day":
-            flt = lambda p: p.entrata >= today
-        elif filter == "month":
-            flt = lambda p: p.entrata.month == now.month and p.entrata.year == now.year
-        elif filter == "lastmonth":
-            if now.month == 1:
-                flt = lambda p: p.entrata.month == 12 and p.entrata.year == now.year - 1
-            else:
-                flt = lambda p: p.entrata.month == now.month - 1 and p.entrata.year == now.year
-        elif filter == "year":
-            flt = lambda p: p.entrata.year == now.year
-        elif filter.startswith("since-"):
-            try:
-                since = datetime.strptime(filter[6:], "%Y-%m-%d")
-                flt = lambda p: p.entrata >= since
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
-        else:
-            filter = "all"  # default
-            flt = lambda p: True
-
-        presenze = presenze.filter(flt)
-        ore = {}
+        presenze = PresenzaLab.select(lambda p: p.entrata >= since_date and p.entrata <= until_date)
+        leaderboard = {}
         for p in presenze:
-            if p.email not in ore:
-                ore[p.email] = 0
-            ore[p.email] += utils.timedelta_to_hours(p.duration)
-        ore = dict(sorted(ore.items(), key=lambda item: item[1], reverse=True))
+            if p.email not in leaderboard:
+                leaderboard[p.email] = 0
+            leaderboard[p.email] += utils.timedelta_to_hours(p.duration)
+        leaderboard = dict(sorted(leaderboard.items(), key=lambda i: i[1], reverse=True))
 
-        return {
-            "leaderboard": ore,
-            "filter": filter
-        }
+        return leaderboard
 
 
 @app.get("/lab/inlab")
