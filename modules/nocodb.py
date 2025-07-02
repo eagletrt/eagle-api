@@ -34,3 +34,19 @@ class NocoDB:
         items = res.json().get("list")
 
         return [item["Full Name"] for item in items]
+
+    def members_info(self):
+        res = self._session.get(f"{self.base_url}/api/v2/tables/m3rsrrmnhhxxw0p/records", params={
+            "limit": 1000,
+            "fields": "Full Name,Team Email,Area",
+            "nested[Area][fields]": "Tag"
+        })
+        items = res.json().get("list")
+
+        return [
+            {
+                "name": item["Full Name"],
+                "email": item["Team Email"],
+                "area": item["Area"]["Tag"] if item.get("Area") else ""
+            } for item in items
+        ]
