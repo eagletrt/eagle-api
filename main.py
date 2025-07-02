@@ -98,9 +98,6 @@ async def tecs_link_ore(x_email: str = Header(default=None)):
 
 @app.get("/lab/ore")
 async def lab_ore(username: str) -> dict:
-    if not username:
-        raise HTTPException(status_code=400, detail="Missing username")
-
     now = datetime.now()
     with db_session:
         presenze = PresenzaLab.select(lambda p: p.email == f"{username}@eagletrt.it")
@@ -115,7 +112,7 @@ async def lab_ore(username: str) -> dict:
 
 
 @app.get("/lab/leaderboard")
-async def lab_leaderboard(since: str, until: str) -> dict:
+async def lab_leaderboard(since: str="", until: str="") -> dict:
     now = datetime.now()
     if not since:
         since = now.strftime("%Y-%m-01") # default to the first day of the current month
