@@ -55,7 +55,7 @@ async def lab_presenza(x_email: str = Header(default=None)):
         raise HTTPException(status_code=400, detail="Missing authentication")
 
     with db_session:
-        presenze = select(p for p in PresenzaLab if p.email == x_email)
+        presenze = PresenzaLab.select(lambda p: p.email == x_email)
         latest = presenze.order_by(desc(PresenzaLab.entrata)).first()
         today = presenze.filter(
             lambda p: p.entrata >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -122,12 +122,11 @@ async def lab_leaderboard(since: str="", until: str="") -> dict:
     try:
         since_date = datetime.strptime(since, "%Y-%m-%d")
         until_date = datetime.strptime(until, "%Y-%m-%d")
-        until_date += timedelta(days=1) # Include the entire end date
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format(s). Use YYYY-MM-DD.")
 
     with db_session:
-        presenze = PresenzaLab.select(lambda p: p.entrata >= since_date and p.entrata <= until_date)
+        presenze = PresenzaLab.select(lambda p: p.entrata >= since_date and p.entrata <= until_date + timedelta(days=1))
         leaderboard = {}
         for p in presenze:
             if p.email not in leaderboard:
@@ -135,7 +134,11 @@ async def lab_leaderboard(since: str="", until: str="") -> dict:
             leaderboard[p.email] += utils.timedelta_to_hours(p.duration)
         leaderboard = dict(sorted(leaderboard.items(), key=lambda i: i[1], reverse=True))
 
-        return leaderboard
+        return {
+            "leaderboard": leaderboard,
+            "since": since_date.strftime("%Y-%m-%d"),
+            "until": until_date.strftime("%Y-%m-%d")
+        }
 
 
 @app.get("/lab/inlab")
