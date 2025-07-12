@@ -2,10 +2,10 @@ import schedule
 from time import sleep
 from threading import Thread
 from datetime import datetime, timedelta
+from fastapi.responses import HTMLResponse
 from pony.orm import db_session, desc, select
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends, Header
-from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from modules.nocodb import NocoDB
 from modules import settings, utils
@@ -85,15 +85,6 @@ async def lab_presenza_confirm(x_email: str = Header(default=None)):
             latest = PresenzaLab(email=x_email, entrata=datetime.now())
             utils.notify_entry(latest)
             return HTMLResponse(content="Entrata confermata.", status_code=200)
-
-
-@app.get("/tecsLinkOre")
-async def tecs_link_ore(x_email: str = Header(default=None)):
-    if not x_email:
-        raise HTTPException(status_code=400, detail="Missing authentication")
-
-    username = x_email.split('@')[0].replace('.', '___')
-    return RedirectResponse(url=f"https://t.me/ThonisNomasbot?start={username}", status_code=302)
 
 
 @app.get("/lab/ore")
