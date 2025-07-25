@@ -25,7 +25,7 @@ class NocoDB:
             } for item in items
         ]
 
-    def active_members(self) -> list[str]:
+    def current_members(self) -> list[str]:
         res = self._session.get(f"{self.base_url}/api/v2/tables/m3rsrrmnhhxxw0p/records", params={
             "limit": 1000,
             "viewId": "vw72nyx0bmaak96s",
@@ -35,9 +35,10 @@ class NocoDB:
 
         return [item["Full Name"] for item in items]
 
-    def members_info(self) -> list[dict]:
+    def public_members(self) -> list[dict]:
         res = self._session.get(f"{self.base_url}/api/v2/tables/m3rsrrmnhhxxw0p/records", params={
             "limit": 1000,
+            "viewId": "vw563gca4zb8joff",
             "fields": "Full Name,Team Email,Area",
             "nested[Area][fields]": "Tag"
         })
