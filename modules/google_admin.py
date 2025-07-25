@@ -14,12 +14,12 @@ class GoogleAdminAPI:
         delegated_credentials = credentials.with_subject(impersonate_admin_email)
         self._service = discovery.build('admin', 'directory_v1', credentials=delegated_credentials)
 
-    def try_create_new_user(self, user: dict, temp_password: str) -> dict:
+    def try_create_new_user(self, user: dict, temp_password: str) -> bool:
         email = user["Team Email"]
 
         try:
-            google_user = self._service.users().get(userKey=email).execute()
-            return google_user
+            self._service.users().get(userKey=email).execute()
+            return False
 
         except errors.HttpError as e:
             error = e.error_details[0]
@@ -34,10 +34,9 @@ class GoogleAdminAPI:
                     "password": temp_password,
                     "changePasswordAtNextLogin": True
                 }
-                google_user = self._service.users().insert(body=user_body).execute()
-                self.add_user_to_group(email, "members@groups.eagletrt.it")
-                return google_user
-            return None
+                self._service.users().insert(body=user_body).execute()
+                return True
+            return False
 
     def add_user_to_group(self, user_email: str, group_email: str):
         try:
@@ -50,6 +49,19 @@ class GoogleAdminAPI:
             error = e.error_details[0]
             if error['reason'] == 'duplicate':
                 return f"User {user_email} is already in group {group_email}"
+            return None
+
+    def remove_user_from_group(self, user_email: str, group_email: str):
+        try:
+            result = self._service.members().delete(
+                groupKey=group_email,
+                memberKey=user_email
+            ).execute()
+            return result
+        except errors.HttpError as e:
+            error = e.error_details[0]
+            if error['reason'] == 'notFound':
+                return f"User {user_email} is not in group {group_email}"
             return None
 
     def list_all_users(self) -> list[str]:

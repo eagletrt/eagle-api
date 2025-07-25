@@ -38,15 +38,30 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Invalid or missing token")
 
 
-@app.post("/newMember", dependencies=[Depends(verify_token)])
-async def new_member(data: dict) -> dict:
+@app.post("/users", dependencies=[Depends(verify_token)])
+async def create_users(data: dict) -> dict:
     existing_users = google.list_all_users()
     to_create = [u for u in data["data"]["rows"] if u["Team Email"] not in existing_users]
 
     for user in to_create:
-        google.try_create_new_user(user, settings.GOOGLE_NEW_USER_PASSWORD)
+        if google.try_create_new_user(user, settings.GOOGLE_NEW_USER_PASSWORD):
+            google.add_user_to_group(user["Team Email"], "members@groups.eagletrt.it")
 
     return {"status": "success", "message": f"{len(to_create)} users created successfully"}
+
+
+@app.put("/users", dependencies=[Depends(verify_token)])
+async def update_users(data: dict) -> dict:
+    existing_users = google.list_all_users()
+    to_update = [u for u in data["data"]["rows"] if u["Team Email"] in existing_users]
+
+    for user in to_update:
+        if user["State"] not in ["Active Member", "In trial"]:
+            google.remove_user_from_group(user["Team Email"], "members@groups.eagletrt.it")
+        elif user["State"] in ["Active Member", "In trial"]:
+            google.add_user_to_group(user["Team Email"], "members@groups.eagletrt.it")
+
+    return {"status": "success", "message": f"{len(to_update)} users updated successfully"}
 
 
 @app.get("/lab/presenza", response_class=HTMLResponse, response_model=None)
