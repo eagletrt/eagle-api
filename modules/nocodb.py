@@ -29,16 +29,6 @@ class NocoDB:
         res = self._session.get(f"{self.base_url}/api/v2/tables/m3rsrrmnhhxxw0p/records", params={
             "limit": 1000,
             "viewId": "vw72nyx0bmaak96s",
-            "fields": "Full Name"
-        })
-        items = res.json().get("list")
-
-        return [item["Full Name"] for item in items]
-
-    def public_members(self) -> list[dict]:
-        res = self._session.get(f"{self.base_url}/api/v2/tables/m3rsrrmnhhxxw0p/records", params={
-            "limit": 1000,
-            "viewId": "vw563gca4zb8joff",
             "fields": "Full Name,Team Email,Area",
             "nested[Area][fields]": "Tag"
         })
@@ -51,3 +41,13 @@ class NocoDB:
                 "area": item["Area"]["Tag"] if item.get("Area") else ""
             } for item in items
         ]
+
+    def public_members(self) -> list[dict]:
+        res = self._session.get(f"{self.base_url}/api/v2/tables/m3rsrrmnhhxxw0p/records", params={
+            "limit": 1000,
+            "viewId": "vw563gca4zb8joff",
+            "fields": "Full Name"
+        })
+        items = res.json().get("list")
+
+        return [item["Full Name"] for item in items]

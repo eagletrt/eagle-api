@@ -167,14 +167,14 @@ async def website_sponsors():
 @app.get("/website/members")
 async def website_members():
     return {
-        "members": nocodb.current_members()
+        "members": nocodb.public_members()
     }
 
 
 @app.get("/members")
 async def members():
     return {
-        "members": nocodb.public_members()
+        "members": nocodb.current_members()
     }
 
 
