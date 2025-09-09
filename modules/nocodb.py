@@ -51,3 +51,10 @@ class NocoDB:
         items = res.json().get("list")
 
         return [item["Full Name"] for item in items]
+
+    def get_user_roles(self, user_id: int) -> list[str]:
+        res = self._session.get(f"{self.base_url}/api/v2/tables/m3rsrrmnhhxxw0p/links/crfcwmtkrbctt9p/records/{user_id}", params={
+            "limit": 1000,
+            "fields": "Tag"
+        })
+        return [item['Tag'] for item in res.json().get("list")]

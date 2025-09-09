@@ -4,6 +4,13 @@ from fastapi.responses import HTMLResponse
 from modules import settings
 from modules.db_ore import PresenzaLab
 
+ROLE_TO_GOOGLE_GROUP = {
+    "RP": "responsibles@groups.eagletrt.it",
+    "RT": "racingteam@groups.eagletrt.it",
+    "PM": "project-managers@groups.eagletrt.it",
+    "HR": "human-resources@groups.eagletrt.it"
+}
+
 
 def get_eagletrt_email(email: str) -> str:
     username = email.split('@')[0].lower()

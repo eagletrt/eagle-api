@@ -56,10 +56,17 @@ async def update_users(data: dict) -> dict:
     to_update = [u for u in data["data"]["rows"] if u["Team Email"] in existing_users]
 
     for user in to_update:
+        # Members group
         if user["State"] not in ["Active Member", "In trial"]:
             google.remove_user_from_group(user["Team Email"], "members@groups.eagletrt.it")
         elif user["State"] in ["Active Member", "In trial"]:
             google.add_user_to_group(user["Team Email"], "members@groups.eagletrt.it")
+
+        # Alumni group
+        if user["State"] == "Alumno":
+            google.add_user_to_group(user["Team Email"], "alumni@groups.eagletrt.it")
+        else:
+            google.remove_user_from_group(user["Team Email"], "alumni@groups.eagletrt.it")
 
     return {"status": "success", "message": f"{len(to_update)} users updated successfully"}
 
