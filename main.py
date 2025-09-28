@@ -125,7 +125,10 @@ async def lab_ore(username: str) -> dict:
 
 
 @app.get("/lab/leaderboard")
-async def lab_leaderboard(since: str="", until: str="") -> dict:
+async def lab_leaderboard(since: str="", until: str="", x_email: str = Header(default=None)) -> dict:
+    if not x_email:
+        raise HTTPException(status_code=400, detail="Missing authentication")
+
     now = datetime.now()
     if not since:
         since = now.strftime("%Y-%m-01") # default to the first day of the current month
