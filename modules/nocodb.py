@@ -1,4 +1,6 @@
 import requests
+from uuid import uuid4
+from datetime import datetime, timedelta
 
 
 class NocoDB:
@@ -58,3 +60,50 @@ class NocoDB:
             "fields": "Tag"
         })
         return [item['Tag'] for item in res.json().get("list")]
+
+    def get_or_create_telemetry_user(self, email: str) -> dict:
+        res = self._session.get(f"{self.base_url}/api/v3/data/pz4ocnd339o3u9v/m8ib5uhza9mai6i/records", params={
+            "limit": 1,
+            "where": f"(email,eq,{email})",
+        })
+        items = res.json().get("records")
+        if items:
+            return items[0]["fields"]
+
+        # If user not found, create it
+        res = self._session.post(f"{self.base_url}/api/v3/data/pz4ocnd339o3u9v/m8ib5uhza9mai6i/records", json={
+            "fields": {"email": email}
+        })
+        items = res.json().get("records")
+        return items[0]["fields"]
+
+    def create_telemetry_token(self, email: str) -> dict:
+        res = self._session.get(f"{self.base_url}/api/v3/data/pz4ocnd339o3u9v/m8ib5uhza9mai6i/records", params={
+            "limit": 1,
+            "where": f"(email,eq,{email})",
+        })
+        items = res.json().get("records")
+        if not items:
+            return None
+
+        user = items[0]
+        res = self._session.patch(f"{self.base_url}/api/v3/data/pz4ocnd339o3u9v/m8ib5uhza9mai6i/records", json={
+            "id": user["id"],
+            "fields": {
+                "token": str(uuid4()),
+                "expiry": (datetime.now() + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S+00:00")
+            }
+        })
+        items = res.json().get("records")
+        return items[0]["fields"]
+
+    def get_telemetry_token(self, token: str) -> dict:
+        res = self._session.get(f"{self.base_url}/api/v3/data/pz4ocnd339o3u9v/m8ib5uhza9mai6i/records", params={
+            "limit": 1,
+            "where": f"(token,eq,{token})~and(expiry,gt,{datetime.now().strftime('%Y-%m-%d %H:%M:%S+00:00')})",
+        })
+        items = res.json().get("records")
+        if not items:
+            return None
+
+        return items[0]["fields"]

@@ -10,6 +10,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from modules.nocodb import NocoDB
 from modules import settings, utils
 from modules.db_ore import PresenzaLab
+from modules.models import TelemetryToken
 from modules.google_admin import GoogleAdminAPI
 
 app = FastAPI()
@@ -34,7 +35,7 @@ app.add_middleware(
 
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if credentials.credentials != settings.BEARER_TOKEN:
+    if credentials.credentials not in [settings.BEARER_TOKEN, settings.TELEMETRY_TOKEN]:
         raise HTTPException(status_code=401, detail="Invalid or missing token")
 
 
@@ -185,6 +186,72 @@ async def website_members():
 async def members():
     return {
         "members": nocodb.current_members()
+    }
+
+
+@app.get("/api/v1/auth/login", response_class=HTMLResponse, response_model=None)
+def telemetry_login(x_email: str = Header(default=None)):
+    if not x_email:
+        raise HTTPException(status_code=400, detail="Missing authentication")
+
+    user = nocodb.get_or_create_telemetry_user(x_email)
+    data = nocodb.create_telemetry_token(x_email)
+    if not data:
+        raise HTTPException(status_code=500, detail="Could not create telemetry token")
+
+    return HTMLResponse(
+        content=f"Your token is: <code>{data['token']}</code>",
+        status_code=200
+    )
+
+
+@app.post("/api/v1/auth/retrieveToken")
+def telemetry_retrieve_token(body: TelemetryToken) -> dict:
+    user = nocodb.get_telemetry_token(body.token)
+    if not user:
+        raise HTTPException(status_code=404, detail="Token expired or not found")
+
+    return {
+        "token": {
+            "access_token": settings.TELEMETRY_TOKEN,
+            "refresh_token": user["token"],
+            "expire": int(datetime.strptime(user["expiry"], "%Y-%m-%d %H:%M:%S+00:00").timestamp()),
+            "token_type": "Bearer"
+        },
+        "user": {
+            "email": user["email"],
+            "role": utils.telemetry_role_translation(user["role"]),
+        }
+    }
+
+
+@app.post("/api/v1/auth/refreshToken", dependencies=[Depends(verify_token)])
+def telemetry_refresh_token(body: TelemetryToken) -> dict:
+    user = nocodb.get_telemetry_token(body.token)
+    if not user:
+        raise HTTPException(status_code=404, detail="Token expired or not found")
+
+    data = nocodb.create_telemetry_token(user["email"])
+    if not data:
+        raise HTTPException(status_code=500, detail="Could not create telemetry token")
+
+    return {
+        "response": {
+            "access_token": settings.TELEMETRY_TOKEN,
+            "refresh_token": data["token"],
+            "expire": int(datetime.strptime(data["expiry"], "%Y-%m-%d %H:%M:%S+00:00").timestamp()),
+            "token_type": "Bearer"
+        }
+    }
+
+
+@app.post("/api/v1/auth/whoAmI", dependencies=[Depends(verify_token)])
+def telemetry_whoami() -> dict:
+    return {
+        "response": {
+            "email": "PLEASE_LOGIN_AGAIN",
+            "role": -1
+        }
     }
 
 

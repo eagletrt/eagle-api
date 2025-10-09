@@ -83,3 +83,12 @@ def notify_exit(presenza: PresenzaLab):
     pretty_duration = pretty_time(timedelta_to_hours(presenza.duration))
     msg = f"💔 {presenza.email} has exited the lab ({pretty_duration})"
     notify_telegram(msg)
+
+
+def telemetry_role_translation(role: str) -> int:
+    roles = {
+        "admin": 0,
+        "editor": 1,
+        "viewer": 2
+    }
+    return roles.get(role, -1)
