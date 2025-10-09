@@ -209,7 +209,7 @@ def telemetry_login(x_email: str = Header(default=None)):
 def telemetry_retrieve_token(body: TelemetryToken) -> dict:
     user = nocodb.get_telemetry_token(body.token)
     if not user:
-        raise HTTPException(status_code=404, detail="Token expired or not found")
+        raise HTTPException(status_code=403, detail="Token expired or not found")
 
     return {
         "token": {
