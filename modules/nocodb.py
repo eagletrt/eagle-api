@@ -100,10 +100,13 @@ class NocoDB:
     def get_telemetry_token(self, token: str) -> dict:
         res = self._session.get(f"{self.base_url}/api/v3/data/pz4ocnd339o3u9v/m8ib5uhza9mai6i/records", params={
             "limit": 1,
-            "where": f"(token,eq,{token})~and(expiry,gt,{datetime.now().strftime('%Y-%m-%d %H:%M:%S+00:00')})",
+            "where": f"(token,eq,{token})",
         })
         items = res.json().get("records")
         if not items:
+            return None
+
+        if datetime.strptime(items[0]["fields"]["expiry"], "%Y-%m-%d %H:%M:%S+00:00") < datetime.now():
             return None
 
         return items[0]["fields"]
