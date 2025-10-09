@@ -245,7 +245,7 @@ def telemetry_refresh_token(body: TelemetryToken) -> dict:
     }
 
 
-@app.post("/api/v1/auth/whoAmI", dependencies=[Depends(verify_token)])
+@app.get("/api/v1/auth/whoAmI", dependencies=[Depends(verify_token)])
 def telemetry_whoami() -> dict:
     return {
         "response": {
