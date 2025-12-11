@@ -183,9 +183,12 @@ async def website_members():
 
 
 @app.get("/members")
-async def members():
+async def members(x_email: str = Header(default=None)):
+    if not x_email:
+        raise HTTPException(status_code=400, detail="Missing authentication")
+
     return {
-        "members": nocodb.current_members()
+        "members": nocodb.all_members()
     }
 
 
