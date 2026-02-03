@@ -4,6 +4,15 @@ from datetime import datetime, timedelta
 
 
 class NocoDB:
+    AREAS_MAP = {
+        1: "CM",
+        2: "DMT",
+        3: "HW",
+        4: "MGT",
+        5: "MT",
+        6: "SW"
+    }
+
     def __init__(self, base_url: str, api_key: str):
         self.base_url = base_url.rstrip("/")
         self._session = requests.Session()

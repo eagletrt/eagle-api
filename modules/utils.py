@@ -92,3 +92,12 @@ def telemetry_role_translation(role: str) -> int:
         "viewer": 2
     }
     return roles.get(role, -1)
+
+
+def generate_temp_password() -> str:
+    import secrets
+    import string
+
+    length = 16
+    characters = string.ascii_letters + string.digits + "!@#*"
+    return ''.join(secrets.choice(characters) for _ in range(length))

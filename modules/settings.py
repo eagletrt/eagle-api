@@ -12,7 +12,13 @@ NOCODB_API_TOKEN: str = os.getenv("NOCODB_API_TOKEN")
 
 GOOGLE_SERVICE_ACCOUNT_JSON: str = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
 GOOGLE_IMPERSONATE_ADMIN_EMAIL: str = os.getenv("GOOGLE_IMPERSONATE_ADMIN_EMAIL")
-GOOGLE_NEW_USER_PASSWORD: str = os.getenv("GOOGLE_NEW_USER_PASSWORD")
+
+AD_USERNAME: str = os.getenv("AD_USERNAME", "")
+AD_PASSWORD: str = os.getenv("AD_PASSWORD", "")
+AD_HOSTNAME: str = os.getenv("AD_HOSTNAME", "")
+
+GMAIL_USERNAME: str = os.getenv("GMAIL_USERNAME", "")
+GMAIL_PASSWORD: str = os.getenv("GMAIL_PASSWORD", "")
 
 if not BEARER_TOKEN:
     raise EnvironmentError("BEARER_TOKEN environment variable is not set")
@@ -24,7 +30,15 @@ if not GOOGLE_SERVICE_ACCOUNT_JSON:
     raise EnvironmentError("GOOGLE_SERVICE_ACCOUNT_JSON environment variable is not set")
 if not GOOGLE_IMPERSONATE_ADMIN_EMAIL:
     raise EnvironmentError("GOOGLE_IMPERSONATE_ADMIN_EMAIL environment variable is not set")
-if not GOOGLE_NEW_USER_PASSWORD:
-    raise EnvironmentError("GOOGLE_NEW_USER_PASSWORD environment variable is not set")
 if not NOCODB_API_TOKEN:
     raise EnvironmentError("NOCODB_API_TOKEN environment variable is not set")
+if not AD_USERNAME:
+    raise EnvironmentError("AD_USERNAME environment variable is not set")
+if not AD_PASSWORD:
+    raise EnvironmentError("AD_PASSWORD environment variable is not set")
+if not AD_HOSTNAME:
+    raise EnvironmentError("AD_HOSTNAME environment variable is not set")
+if not GMAIL_USERNAME:
+    raise EnvironmentError("GMAIL_USERNAME environment variable is not set")
+if not GMAIL_PASSWORD:
+    raise EnvironmentError("GMAIL_PASSWORD environment variable is not set")
