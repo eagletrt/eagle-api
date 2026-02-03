@@ -95,9 +95,14 @@ def telemetry_role_translation(role: str) -> int:
 
 
 def generate_temp_password() -> str:
-    import secrets
     import string
+    import secrets
 
     length = 16
     characters = string.ascii_letters + string.digits + "!@#*"
-    return ''.join(secrets.choice(characters) for _ in range(length))
+    while True:
+        password = ''.join(secrets.choice(characters) for _ in range(length))
+        if (any(c.islower() for c in password) and
+            any(c.isupper() for c in password) and
+            any(c.isdigit() for c in password)):
+            return password

@@ -10,11 +10,11 @@ class ActiveDirAdmin:
     def try_create_new_user(self, user: dict, temp_password: str) -> bool:
         command = (
             f'powershell -File C:\\API\\AddUser.ps1 '
-            f"-FirstName '{user['Name']}' "
-            f"-LastName '{user['Surname']}' "
-            f"-Username '{user['Team Email'].split('@')[0].lower()}' "
-            f"-InitialPassword '{temp_password}' "
-            f"-GroupName '{user['AreaTag']}'"
+            f"-FirstName \"{user['Name']}\" "
+            f"-LastName \"{user['Surname']}\" "
+            f"-Username \"{user['Team Email'].split('@')[0].lower()}\" "
+            f"-InitialPassword '{temp_password}\" "
+            f"-GroupName \"{user['AreaTag']}\""
         )
 
         try:
