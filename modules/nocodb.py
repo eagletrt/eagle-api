@@ -48,7 +48,8 @@ class NocoDB:
             {
                 "name": item["Full Name"],
                 "email": item["Team Email"],
-                "area": item["Area"]["Tag"] if item.get("Area") else ""
+                "area": item["Area"]["Tag"] if item.get("Area") else "",
+                "active": item["State"] in ["Active Member", "In trial"]
             } for item in items
         ]
 
