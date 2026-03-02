@@ -39,7 +39,7 @@ class NocoDB:
     def all_members(self) -> list[str]:
         res = self._session.get(f"{self.base_url}/api/v2/tables/m3rsrrmnhhxxw0p/records", params={
             "limit": 1000,
-            "fields": "Full Name,Team Email,Area",
+            "fields": "Full Name,Team Email,Area,State",
             "nested[Area][fields]": "Tag"
         })
         items = res.json().get("list")
