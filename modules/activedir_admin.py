@@ -8,6 +8,7 @@ class ActiveDirAdmin:
         self._ad_server = ad_server
 
     def try_create_new_user(self, user: dict, temp_password: str) -> bool:
+        print("[AD] Creating user:", user['Team Email'])
         command = (
             f'powershell -File C:\\API\\AddUser.ps1 '
             f"-FirstName \"{user['Name']}\" "
@@ -25,9 +26,11 @@ class ActiveDirAdmin:
                 username=self._ad_username,
                 password=self._ad_password,
             )
+            print("[AD] Executing command:", command)
             stdin, stdout, stderr = ssh.exec_command(command)
             exit_status = stdout.channel.recv_exit_status()
             ssh.close()
+            print("[AD] Close SSH connection")
 
             return exit_status == 0
         except Exception as e:
