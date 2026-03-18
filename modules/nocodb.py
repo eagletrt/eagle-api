@@ -39,8 +39,10 @@ class NocoDB:
     def all_members(self) -> list[str]:
         res = self._session.get(f"{self.base_url}/api/v2/tables/m3rsrrmnhhxxw0p/records", params={
             "limit": 1000,
-            "fields": "Full Name,Team Email,Area,State",
-            "nested[Area][fields]": "Tag"
+            "fields": "Full Name,Team Email,Area,State,Project,Workgroup",
+            "nested[Area][fields]": "Tag",
+            "nested[Project][fields]": "Full Name",
+            "nested[Workgroup][fields]": "Full Name"
         })
         items = res.json().get("list")
 
@@ -49,6 +51,8 @@ class NocoDB:
                 "name": item["Full Name"],
                 "email": item["Team Email"],
                 "area": item["Area"]["Tag"] if item.get("Area") else "",
+                "project": item["Project"]["Full Name"] if item.get("Project") else "",
+                "workgroup": item["Workgroup"]["Full Name"] if item.get("Workgroup") else "",
                 "active": item["State"] in ["Active Member", "In trial"]
             } for item in items
         ]
