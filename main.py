@@ -61,7 +61,7 @@ async def create_users(data: dict) -> dict:
         if google.try_create_new_user(user, temp_password):
             google.add_user_to_group(user["Team Email"], "members@groups.eagletrt.it")
 
-        activedir.try_create_new_user(user, temp_password)
+        # activedir.try_create_new_user(user, temp_password)
         gmail.send_email(user["University Email"], "E-Agle TRT Account Credentials",
                          f"Hi {user['Name']},\n\n"
                          f"Your E-Agle TRT has been created successfully!\n\n"
