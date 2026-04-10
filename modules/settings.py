@@ -9,12 +9,13 @@ BOT_TOKEN: str = os.getenv("BOT_TOKEN")
 LOG_CHAT_ID: int = int(os.getenv("LOG_CHAT_ID", 0))
 LOG_TOPIC_ID: int = int(os.getenv("LOG_TOPIC_ID", 0))
 NOCODB_API_TOKEN: str = os.getenv("NOCODB_API_TOKEN")
+DB_USERNAME: str = os.getenv("DB_USERNAME")
+DB_PASSWORD: str = os.getenv("DB_PASSWORD")
+DB_HOST: str = os.getenv("DB_HOST")
+DB_PORT: int = os.getenv("DB_PORT")
+DB_NAME: str = os.getenv("DB_NAME")
 
-if not BEARER_TOKEN:
-    raise EnvironmentError("BEARER_TOKEN environment variable is not set")
-if not TELEMETRY_TOKEN:
-    raise EnvironmentError("TELEMETRY_TOKEN environment variable is not set")
-if not BOT_TOKEN:
-    raise EnvironmentError("BOT_TOKEN environment variable is not set")
-if not NOCODB_API_TOKEN:
-    raise EnvironmentError("NOCODB_API_TOKEN environment variable is not set")
+for required_var in ["BEARER_TOKEN", "TELEMETRY_TOKEN", "BOT_TOKEN", "NOCODB_API_TOKEN",
+                     "DB_USERNAME", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME"]:
+    if not globals()[required_var]:
+        raise EnvironmentError(f"{required_var} environment variable is not set")

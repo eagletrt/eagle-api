@@ -1,7 +1,8 @@
-from pony.orm import Database, Required, Optional
 from datetime import datetime, timedelta
+from pony.orm import Database, Required, Optional
+from modules import settings
 
-db = Database("sqlite", "/data/oreLab.db", create_db=True)
+db = Database()
 
 
 class PresenzaLab(db.Entity):
@@ -24,4 +25,5 @@ class PresenzaLab(db.Entity):
         return self.uscita - self.entrata
 
 
+db.bind(provider='postgres', user=settings.DB_USERNAME, password=settings.DB_PASSWORD, host=settings.DB_HOST, port=settings.DB_PORT, database=settings.DB_NAME)
 db.generate_mapping(create_tables=True)
