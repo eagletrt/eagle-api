@@ -7,7 +7,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: ci-runners
+      labels: Linux
     permissions:
       packages: write
 

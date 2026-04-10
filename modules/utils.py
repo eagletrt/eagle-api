@@ -10,11 +10,11 @@ ROLE_TO_GOOGLE_GROUP = {
     "PM": "project-managers@groups.eagletrt.it",
     "HR": "human-resources@groups.eagletrt.it"
 }
-
-
-def get_eagletrt_email(email: str) -> str:
-    username = email.split('@')[0].lower()
-    return f"{username}@eagletrt.it"
+TELEMETRY_ROLES = {
+    "admin": 0,
+    "editor": 1,
+    "viewer": 2
+}
 
 
 def timedelta_to_hours(td: timedelta) -> float:
@@ -86,23 +86,4 @@ def notify_exit(presenza: PresenzaLab):
 
 
 def telemetry_role_translation(role: str) -> int:
-    roles = {
-        "admin": 0,
-        "editor": 1,
-        "viewer": 2
-    }
-    return roles.get(role, -1)
-
-
-def generate_temp_password() -> str:
-    import string
-    import secrets
-
-    length = 16
-    characters = string.ascii_letters + string.digits + "!@#*"
-    while True:
-        password = ''.join(secrets.choice(characters) for _ in range(length))
-        if (any(c.islower() for c in password) and
-            any(c.isupper() for c in password) and
-            any(c.isdigit() for c in password)):
-            return password
+    return TELEMETRY_ROLES.get(role, -1)

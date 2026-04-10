@@ -7,32 +7,17 @@ from pony.orm import db_session, desc, select
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from modules.gmail import Gmail
+
 from modules.nocodb import NocoDB
 from modules import settings, utils
 from modules.db_ore import PresenzaLab
 from modules.models import TelemetryToken
-from modules.google_admin import GoogleAdminAPI
-from modules.activedir_admin import ActiveDirAdmin
 
 app = FastAPI()
 security = HTTPBearer()
-google = GoogleAdminAPI(
-    service_account_json=settings.GOOGLE_SERVICE_ACCOUNT_JSON,
-    impersonate_admin_email=settings.GOOGLE_IMPERSONATE_ADMIN_EMAIL
-)
 nocodb = NocoDB(
     base_url="https://nocodb.eagletrt.it",
     api_key=settings.NOCODB_API_TOKEN
-)
-activedir = ActiveDirAdmin(
-    ad_username=settings.AD_USERNAME,
-    ad_password=settings.AD_PASSWORD,
-    ad_server=settings.AD_HOSTNAME
-)
-gmail = Gmail(
-    username=settings.GMAIL_USERNAME,
-    password=settings.GMAIL_PASSWORD
 )
 
 # Fix CORS
@@ -48,52 +33,6 @@ app.add_middleware(
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     if credentials.credentials not in [settings.BEARER_TOKEN, settings.TELEMETRY_TOKEN]:
         raise HTTPException(status_code=401, detail="Invalid or missing token")
-
-
-@app.post("/users", dependencies=[Depends(verify_token)])
-async def create_users(data: dict) -> dict:
-    existing_users = google.list_all_users()
-    to_create = [u for u in data["data"]["rows"] if u["Team Email"] not in existing_users]
-
-    for user in to_create:
-        temp_password = utils.generate_temp_password()
-        user["AreaTag"] = nocodb.AREAS_MAP[user["nc_t5c9__Areas_id"]]
-        if google.try_create_new_user(user, temp_password):
-            google.add_user_to_group(user["Team Email"], "members@groups.eagletrt.it")
-
-        # activedir.try_create_new_user(user, temp_password)
-        gmail.send_email(user["University Email"], "E-Agle TRT Account Credentials",
-                         f"Hi {user['Name']},\n\n"
-                         f"Your E-Agle TRT has been created successfully!\n\n"
-                         f"Here are your login credentials:\n"
-                         f"- username: {user['Team Email']}\n"
-                         f"- temporary password: {temp_password}\n\n"
-                         f"Please ask your HR for further instructions.")
-
-    return {"status": "success", "message": f"{len(to_create)} users created successfully"}
-
-
-@app.put("/users", dependencies=[Depends(verify_token)])
-async def update_users(data: dict) -> dict:
-    existing_users = google.list_all_users()
-    to_update = [u for u in data["data"]["rows"] if u["Team Email"] in existing_users]
-
-    for user in to_update:
-        # Members group
-        if user["State"] not in ["Active Member", "In trial"]:
-            google.remove_user_from_group(user["Team Email"], "members@groups.eagletrt.it")
-            activedir.disable_user(user["Team Email"])
-        elif user["State"] in ["Active Member", "In trial"]:
-            google.add_user_to_group(user["Team Email"], "members@groups.eagletrt.it")
-            activedir.enable_user(user["Team Email"])
-
-        # Alumni group
-        if user["State"] == "Alumno":
-            google.add_user_to_group(user["Team Email"], "alumni@groups.eagletrt.it")
-        else:
-            google.remove_user_from_group(user["Team Email"], "alumni@groups.eagletrt.it")
-
-    return {"status": "success", "message": f"{len(to_update)} users updated successfully"}
 
 
 @app.get("/lab/presenza", response_class=HTMLResponse, response_model=None)
