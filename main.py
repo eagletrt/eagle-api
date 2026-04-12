@@ -204,7 +204,7 @@ async def telemetry_v1_refresh_token(request: Request) -> dict:
         user.refreshToken()
         return {
             "response": {
-                "access_token": settings.TELEMETRY_TOKEN,
+                "access_token": user.token,
                 "refresh_token": user.token,
                 "expire": int(user.expiry.timestamp()),
                 "token_type": "Bearer"
@@ -215,15 +215,19 @@ async def telemetry_v1_refresh_token(request: Request) -> dict:
 @app.get("/api/v1/auth/whoAmI")
 async def telemetry_v1_whoami(Authorization: str=Header(default=None)) -> dict:
     token = Authorization.split(" ", 1)[1] if Authorization and " " in Authorization else None
-    user = TelemetryUser.get(token=token)
-    if (not token) or (not user) or (not user.hasValidToken):
-        raise HTTPException(status_code=403, detail="Token expired or not found")
-    return {
-        "response": {
-            "email": user.email,
-            "role": user.role
+    with db_session:
+        try:
+            user = TelemetryUser.get(token=token)
+            if (not token) or (not user) or (not user.hasValidToken):
+                raise HTTPException(status_code=403, detail="Token expired or not found")
+        except Exception:
+            raise HTTPException(status_code=403, detail="Invalid token")
+        return {
+            "response": {
+                "email": user.email,
+                "role": user.role
+            }
         }
-    }
 
 
 @app.get("/telemetry/login")
