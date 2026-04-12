@@ -1,3 +1,4 @@
+import json
 import schedule
 from time import sleep
 from threading import Thread
@@ -5,8 +6,7 @@ from datetime import datetime, timedelta
 from fastapi.responses import HTMLResponse
 from pony.orm import db_session, desc, select
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, HTTPException, Depends, Header, Query
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import FastAPI, HTTPException, Header, Query, Request
 
 from modules.nocodb import NocoDB
 from modules import settings, utils
@@ -14,7 +14,6 @@ from modules.models import TelemetryToken
 from modules.database import PresenzaLab, TelemetryUser
 
 app = FastAPI()
-security = HTTPBearer()
 nocodb = NocoDB(
     base_url="https://nocodb.eagletrt.it",
     api_key=settings.NOCODB_API_TOKEN
@@ -30,13 +29,8 @@ app.add_middleware(
 )
 
 
-def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if credentials.credentials not in [settings.BEARER_TOKEN, settings.TELEMETRY_TOKEN]:
-        raise HTTPException(status_code=401, detail="Invalid or missing token")
-
-
 @app.get("/lab/presenza", response_class=HTMLResponse, response_model=None)
-async def lab_presenza(x_email: str = Header(default=None)):
+async def lab_presenza(x_email: str=Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
@@ -57,7 +51,7 @@ async def lab_presenza(x_email: str = Header(default=None)):
 
 
 @app.post("/lab/presenza/confirm", response_class=HTMLResponse, response_model=None)
-async def lab_presenza_confirm(x_email: str = Header(default=None)):
+async def lab_presenza_confirm(x_email: str=Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
@@ -89,7 +83,7 @@ async def lab_ore(username: str) -> dict:
 
 
 @app.get("/lab/leaderboard")
-async def lab_leaderboard(since: str="", until: str="", x_email: str = Header(default=None)) -> dict:
+async def lab_leaderboard(since: str="", until: str="", x_email: str=Header(default=None)) -> dict:
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
@@ -146,7 +140,7 @@ async def website_members():
 
 
 @app.get("/members")
-async def members(x_email: str = Header(default=None)):
+async def members(x_email: str=Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
@@ -156,7 +150,7 @@ async def members(x_email: str = Header(default=None)):
 
 
 @app.get("/api/v1/auth/login", response_class=HTMLResponse, response_model=None)
-def telemetry_v1_login(x_email: str = Header(default=None)):
+async def telemetry_v1_login(x_email: str=Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
@@ -174,7 +168,10 @@ def telemetry_v1_login(x_email: str = Header(default=None)):
 
 
 @app.post("/api/v1/auth/retrieveToken")
-def telemetry_v1_retrieve_token(body: TelemetryToken) -> dict:
+async def telemetry_v1_retrieve_token(request: Request) -> dict:
+    raw_body = await request.body()
+    data = json.loads(raw_body)
+    body = TelemetryToken(**data)
     with db_session:
         user = TelemetryUser.get(token=body.token)
         if (not user) or (not user.hasValidToken):
@@ -182,7 +179,7 @@ def telemetry_v1_retrieve_token(body: TelemetryToken) -> dict:
 
         return {
             "token": {
-                "access_token": settings.TELEMETRY_TOKEN,
+                "access_token": user.token,
                 "refresh_token": user.token,
                 "expire": int(user.expiry.timestamp()),
                 "token_type": "Bearer"
@@ -194,8 +191,11 @@ def telemetry_v1_retrieve_token(body: TelemetryToken) -> dict:
         }
 
 
-@app.post("/api/v1/auth/refreshToken", dependencies=[Depends(verify_token)])
-def telemetry_v1_refresh_token(body: TelemetryToken) -> dict:
+@app.post("/api/v1/auth/refreshToken")
+async def telemetry_v1_refresh_token(request: Request) -> dict:
+    raw_body = await request.body()
+    data = json.loads(raw_body)
+    body = TelemetryToken(**data)
     with db_session:
         user = TelemetryUser.get(token=body.token)
         if (not user) or (not user.hasValidToken):
@@ -212,18 +212,22 @@ def telemetry_v1_refresh_token(body: TelemetryToken) -> dict:
         }
 
 
-@app.get("/api/v1/auth/whoAmI", dependencies=[Depends(verify_token)])
-def telemetry_v1_whoami() -> dict:
+@app.get("/api/v1/auth/whoAmI")
+async def telemetry_v1_whoami(Authorization: str=Header(default=None)) -> dict:
+    token = Authorization.split(" ", 1)[1] if Authorization and " " in Authorization else None
+    user = TelemetryUser.get(token=token)
+    if (not token) or (not user) or (not user.hasValidToken):
+        raise HTTPException(status_code=403, detail="Token expired or not found")
     return {
         "response": {
-            "email": "PLEASE_LOGIN_AGAIN",
-            "role": -1
+            "email": user.email,
+            "role": user.role
         }
     }
 
 
 @app.get("/telemetry/login")
-def telemetry_login(x_email: str=Header(default=None), callback: str=Query(default=None)) -> dict:
+async def telemetry_login(x_email: str=Header(default=None), callback: str=Query(default=None)) -> dict:
     if not x_email:
         return {"success": False, "message": "Missing authentication"}
 
@@ -242,13 +246,11 @@ def telemetry_login(x_email: str=Header(default=None), callback: str=Query(defau
             "expiry": int(user.expiry.timestamp())
         }
 
-        if callback:
-            return utils.telemetry_login_html(callback, payload)
-        return payload
+        return utils.telemetry_login_html(callback, payload) if callback else payload
 
 
 @app.post("/telemetry/refresh")
-def telemetry_refresh(body: TelemetryToken) -> dict:
+async def telemetry_refresh(body: TelemetryToken) -> dict:
     with db_session:
         if not (user := TelemetryUser.get(token=body.token)):
             return {"success": False, "message": "Token not found"}
