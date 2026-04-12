@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Telemetry App Login</title>
+</head>
+<body>
+    <p>Completing login, please wait...</p>
+    <script>
+        const callbackUrl = {callback_url};
+        const payload = {payload};
+
+        fetch(callbackUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            document.body.innerHTML = "Login data sent to Telemetry App. Closing in 3 seconds...";
+            setTimeout(() => {
+                window.close();
+            }, 3000);
+        })
+        .catch(error => {
+            document.body.innerHTML = "Error reaching the callback URL.";
+            console.error("Callback fetch error:", error);
+        });
+    </script>
+</body>
+</html>

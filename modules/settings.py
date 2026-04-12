@@ -14,6 +14,8 @@ DB_PASSWORD: str = os.getenv("DB_PASSWORD")
 DB_HOST: str = os.getenv("DB_HOST")
 DB_PORT: int = os.getenv("DB_PORT")
 DB_NAME: str = os.getenv("DB_NAME")
+TLM_TOKEN_DURATION: int = int(os.getenv("TLM_TOKEN_DURATION", 28800))
+TLM_TOKEN_REFRESH: int = int(os.getenv("TLM_TOKEN_REFRESH", 3600))
 
 for required_var in ["BEARER_TOKEN", "TELEMETRY_TOKEN", "BOT_TOKEN", "NOCODB_API_TOKEN",
                      "DB_USERNAME", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME"]:

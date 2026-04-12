@@ -1,20 +1,9 @@
+import json
 import requests
 from datetime import timedelta
 from fastapi.responses import HTMLResponse
 from modules import settings
-from modules.db_ore import PresenzaLab
-
-ROLE_TO_GOOGLE_GROUP = {
-    "RP": "responsibles@groups.eagletrt.it",
-    "RT": "racingteam@groups.eagletrt.it",
-    "PM": "project-managers@groups.eagletrt.it",
-    "HR": "human-resources@groups.eagletrt.it"
-}
-TELEMETRY_ROLES = {
-    "admin": 0,
-    "editor": 1,
-    "viewer": 2
-}
+from modules.database import PresenzaLab
 
 
 def timedelta_to_hours(td: timedelta) -> float:
@@ -34,6 +23,16 @@ def orelab_entrata(ore_oggi: float) -> HTMLResponse:
     with open("pages/entrata_lab.html") as f:
         res = f.read() \
                 .replace("{ore_oggi}", ore_oggi)
+    return HTMLResponse(content=res, status_code=200)
+
+
+def telemetry_login_html(callback_url: str, payload: dict) -> HTMLResponse:
+    safe_url = json.dumps(callback_url)
+    safe_payload = json.dumps(payload)
+    with open("pages/telemetry_login.html") as f:
+        res = f.read() \
+                .replace("{callback_url}", safe_url) \
+                .replace("{payload}", safe_payload)
     return HTMLResponse(content=res, status_code=200)
 
 
@@ -83,7 +82,3 @@ def notify_exit(presenza: PresenzaLab):
     pretty_duration = pretty_time(timedelta_to_hours(presenza.duration))
     msg = f"💔 {presenza.email} has exited the lab ({pretty_duration})"
     notify_telegram(msg)
-
-
-def telemetry_role_translation(role: str) -> int:
-    return TELEMETRY_ROLES.get(role, -1)
