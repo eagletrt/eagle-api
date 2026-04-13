@@ -8,7 +8,7 @@ class TelemetryToken(BaseModel):
 
 
 class EMQXAuthRequest(BaseModel):
-    token: str
+    token: Optional[str]
     sub: Optional[str]
 
 
