@@ -246,7 +246,7 @@ async def telemetry_login(x_email: str=Header(default=None), callback: str=Query
             "success": True,
             "email": user.email,
             "role": user.role,
-            "token": user.token,
+            "token": str(user.token),
             "expiry": int(user.expiry.timestamp())
         }
 
