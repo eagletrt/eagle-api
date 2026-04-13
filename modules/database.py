@@ -43,7 +43,9 @@ class TelemetryUser(db.Entity):
     def refreshToken(self) -> bool:
         if not self.hasValidToken:
             return False
-        self.expiry = datetime.now() + timedelta(seconds=settings.TLM_TOKEN_REFRESH)
+        next_expiry = datetime.now() + timedelta(seconds=settings.TLM_TOKEN_REFRESH)
+        if next_expiry > self.expiry:
+            self.expiry = next_expiry
         return True
 
 
