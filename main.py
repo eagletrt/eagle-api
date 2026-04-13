@@ -321,7 +321,7 @@ async def emqx_auth(body: EMQXAuthRequest, Authorization: str=Header(default=Non
         auth_response = EMQXAuthResponse(
             result=EMQXAuthResponse.Result.ALLOW,
             is_superuser=False,
-            client_attrs=EMQXAuthResponse.ClientAttribute(role=user.role, sn=body.sub or ""),
+            client_attrs=EMQXAuthResponse.ClientAttribute(role=str(user.role), sn=body.sub or ""),
             acl=acl_items
         )
         return auth_response
