@@ -31,8 +31,8 @@ class EMQXAuthResponse(BaseModel):
         ALL = "all"
 
     class AclItem(BaseModel):
-        permission: EMQXAuthResponse.Permission
-        action: EMQXAuthResponse.Action
+        permission: str
+        action: str
         topic: str
         qos: Optional[list[int]]
 
