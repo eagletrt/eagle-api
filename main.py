@@ -214,7 +214,7 @@ async def telemetry_v1_whoami(Authorization: str=Header(default=None)) -> dict:
             user = TelemetryUser.get(token=token)
             if (not token) or (not user) or (not user.hasValidToken):
                 raise HTTPException(status_code=403, detail="Token expired or not found")
-        except Exception:
+        except ValueError:
             raise HTTPException(status_code=403, detail="Invalid token")
         return {
             "response": {
@@ -250,10 +250,13 @@ async def telemetry_login(x_email: str=Header(default=None), callback: str=Query
 @app.post("/telemetry/refresh")
 async def telemetry_refresh(body: TelemetryToken) -> dict:
     with db_session:
-        if not (user := TelemetryUser.get(token=body.token)):
-            return {"success": False, "message": "Token not found"}
-        if not user.hasValidToken:
-            return {"success": False, "message": "Token expired"}
+        try:
+            if not (user := TelemetryUser.get(token=body.token)):
+                return {"success": False, "message": "Token not found"}
+            if not user.hasValidToken:
+                return {"success": False, "message": "Token expired"}
+        except ValueError:
+            return {"success": False, "message": "Invalid token"}
 
         user.refreshToken()
         return {
