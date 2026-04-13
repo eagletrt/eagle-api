@@ -167,9 +167,12 @@ async def telemetry_v1_retrieve_token(request: Request) -> dict:
     data = json.loads(raw_body)
     body = TelemetryToken(**data)
     with db_session:
-        user = TelemetryUser.get(token=body.token)
-        if (not user) or (not user.hasValidToken):
-            raise HTTPException(status_code=403, detail="Token expired or not found")
+        try:
+            user = TelemetryUser.get(token=body.token)
+            if (not user) or (not user.hasValidToken):
+                raise HTTPException(status_code=403, detail="Token expired or not found")
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Invalid token")
 
         return {
             "token": {
@@ -191,9 +194,12 @@ async def telemetry_v1_refresh_token(request: Request) -> dict:
     data = json.loads(raw_body)
     body = TelemetryToken(**data)
     with db_session:
-        user = TelemetryUser.get(token=body.token)
-        if (not user) or (not user.hasValidToken):
-            raise HTTPException(status_code=403, detail="Token expired or not found")
+        try:
+            user = TelemetryUser.get(token=body.token)
+            if (not user) or (not user.hasValidToken):
+                raise HTTPException(status_code=403, detail="Token expired or not found")
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Invalid token")
 
         user.refreshToken()
         return {
@@ -303,9 +309,12 @@ async def emqx_auth(body: EMQXAuthRequest, Authorization: str=Header(default=Non
         return empty_response
 
     with db_session:
-        if not (user := TelemetryUser.get(token=body.token)):
-            return empty_response
-        if not user.hasValidToken:
+        try:
+            if not (user := TelemetryUser.get(token=body.token)):
+                return empty_response
+            if not user.hasValidToken:
+                return empty_response
+        except ValueError:
             return empty_response
 
         acl_items = generate_acls_from_user_role(user.role)
