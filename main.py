@@ -271,6 +271,23 @@ async def telemetry_refresh(body: TelemetryToken) -> dict:
         }
 
 
+@app.get("/telemetry/whoami")
+async def telemetry_whoami(body: TelemetryToken) -> dict:
+    with db_session:
+        try:
+            if not (user := TelemetryUser.get(token=body.token)):
+                return {"success": False, "message": "Token not found"}
+            if not user.hasValidToken:
+                return {"success": False, "message": "Token expired"}
+        except ValueError:
+            return {"success": False, "message": "Invalid token"}
+        return {
+            "email": user.email,
+            "role": user.role,
+            "expiry": int(user.expiry.timestamp())
+        }
+
+
 @app.post("/emqx/auth")
 async def emqx_auth(body: EMQXAuthRequest, Authorization: str=Header(default=None)) -> EMQXAuthResponse:
     def generate_acls_from_user_role(user_role: str) -> list[EMQXAuthResponse.AclItem]:
