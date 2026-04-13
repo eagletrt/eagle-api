@@ -1,9 +1,13 @@
+import re
 import json
 import requests
 from datetime import timedelta
 from fastapi.responses import HTMLResponse
 from modules import settings
 from modules.database import PresenzaLab
+
+# Initialize MQTT topics cache
+MQTT_TOPICS = requests.get(settings.TLM_MQTT_TOPICS_URL, timeout=3).json()
 
 
 def timedelta_to_hours(td: timedelta) -> float:
@@ -63,14 +67,12 @@ def notify_telegram(message: str):
     if chatId == 0 or topicId == 0:
         return
 
-    url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage"
-    data = {
+    requests.post(f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage", data={
         "chat_id": chatId,
         "message_thread_id": topicId,
         "text": message,
         "parse_mode": "HTML"
-    }
-    requests.post(url, data=data)
+    })
 
 
 def notify_entry(presenza: PresenzaLab):
@@ -82,3 +84,14 @@ def notify_exit(presenza: PresenzaLab):
     pretty_duration = pretty_time(timedelta_to_hours(presenza.duration))
     msg = f"💔 {presenza.email} has exited the lab ({pretty_duration})"
     notify_telegram(msg)
+
+
+def mqtt_topics_to_emqx(topics: list) -> list:
+    return [
+        {
+            "topic": re.sub(r'<[^>]+>', '+', topic["topic"]),
+            "subscribe_roles": topic["subscribe_roles"],
+            "publish_roles": topic["publish_roles"],
+            "qos": topic["qos"]
+        } for topic in topics
+    ]

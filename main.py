@@ -10,8 +10,8 @@ from fastapi import FastAPI, HTTPException, Header, Query, Request
 
 from modules.nocodb import NocoDB
 from modules import settings, utils
-from modules.models import TelemetryToken
 from modules.database import PresenzaLab, TelemetryUser
+from modules.models import TelemetryToken, EMQXAuthRequest, EMQXAuthResponse
 
 app = FastAPI()
 nocodb = NocoDB(
@@ -127,16 +127,12 @@ async def lab_inlab() -> dict:
 
 @app.get("/website/sponsors")
 async def website_sponsors():
-    return {
-        "sponsors": nocodb.sponsors()
-    }
+    return {"sponsors": nocodb.sponsors()}
 
 
 @app.get("/website/members")
 async def website_members():
-    return {
-        "members": nocodb.public_members()
-    }
+    return {"members": nocodb.public_members()}
 
 
 @app.get("/members")
@@ -144,9 +140,7 @@ async def members(x_email: str=Header(default=None)):
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
-    return {
-        "members": nocodb.all_members()
-    }
+    return {"members": nocodb.all_members()}
 
 
 @app.get("/api/v1/auth/login", response_class=HTMLResponse, response_model=None)
@@ -266,6 +260,59 @@ async def telemetry_refresh(body: TelemetryToken) -> dict:
             "success": True,
             "expiry": int(user.expiry.timestamp())
         }
+
+
+@app.post("/emqx/auth")
+async def emqx_auth(body: EMQXAuthRequest, Authorization: str=Header(default=None)) -> EMQXAuthResponse:
+    def generate_acls_from_user_role(user_role: str) -> list[EMQXAuthResponse.AclItem]:
+        if not isinstance(user_role, str):
+            user_role = str(user_role)
+
+        acls = []
+        topics = utils.mqtt_topics_to_emqx(utils.MQTT_TOPICS)
+        for topic in topics:
+            acls.append(
+                EMQXAuthResponse.AclItem(
+                    permission=EMQXAuthResponse.Permission.ALLOW.value if user_role in topic["subscribe_roles"] else EMQXAuthResponse.Permission.DENY.value,
+                    action=EMQXAuthResponse.Action.SUBSCRIBE.value,
+                    topic=topic["topic"],
+                    qos=[topic["qos"]]
+                )
+            )
+            acls.append(
+                EMQXAuthResponse.AclItem(
+                    permission=EMQXAuthResponse.Permission.ALLOW.value if user_role in topic["publish_roles"] else EMQXAuthResponse.Permission.DENY.value,
+                    action=EMQXAuthResponse.Action.PUBLISH.value,
+                    topic=topic["topic"],
+                    qos=[topic["qos"]]
+                )
+            )
+        return acls
+
+    empty_response = EMQXAuthResponse(
+        result=EMQXAuthResponse.Result.DENY,
+        is_superuser=False,
+        client_attrs=EMQXAuthResponse.ClientAttribute(role="unknown", sn=""),
+        acl=[]
+    )
+
+    if Authorization != f"Bearer {settings.EMQX_BEARER_TOKEN}":
+        return empty_response
+
+    with db_session:
+        if not (user := TelemetryUser.get(token=body.token)):
+            return empty_response
+        if not user.hasValidToken:
+            return empty_response
+
+        acl_items = generate_acls_from_user_role(user.role)
+        auth_response = EMQXAuthResponse(
+            result=EMQXAuthResponse.Result.ALLOW,
+            is_superuser=False,
+            client_attrs=EMQXAuthResponse.ClientAttribute(role=user.role, sn=body.sub or ""),
+            acl=acl_items
+        )
+        return auth_response
 
 
 def deleteActivePresenze():
