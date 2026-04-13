@@ -8,14 +8,14 @@ class TelemetryToken(BaseModel):
 
 
 class EMQXAuthRequest(BaseModel):
-    token: Optional[str]
-    sub: Optional[str]
+    token: Optional[str] = None
+    sub: Optional[str] = None
 
 
 class EMQXAuthResponse(BaseModel):
     class ClientAttribute(BaseModel):
-        role: str
-        sn: str
+        role: str = "unknown"
+        sn: str = ""
 
     class Result(Enum):
         ALLOW = "allow"
