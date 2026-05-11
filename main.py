@@ -125,11 +125,6 @@ async def lab_inlab() -> dict:
         }
 
 
-@app.get("/website/sponsors")
-async def website_sponsors():
-    return {"sponsors": nocodb.sponsors()}
-
-
 @app.get("/website/members")
 async def website_members():
     return {"members": nocodb.public_members()}
@@ -271,7 +266,7 @@ async def telemetry_refresh(body: TelemetryToken) -> dict:
         }
 
 
-@app.get("/telemetry/whoami")
+@app.post("/telemetry/whoami")
 async def telemetry_whoami(body: TelemetryToken) -> dict:
     with db_session:
         try:
