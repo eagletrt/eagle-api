@@ -277,6 +277,7 @@ async def telemetry_whoami(body: TelemetryToken) -> dict:
         except ValueError:
             return {"success": False, "message": "Invalid token"}
         return {
+            "success": True,
             "email": user.email,
             "role": user.role,
             "expiry": int(user.expiry.timestamp())
