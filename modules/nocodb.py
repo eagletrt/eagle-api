@@ -27,10 +27,10 @@ class NocoDB:
 
         return [
             {
-                "name": item["Full Name"],
-                "email": item["Team Email"],
-                "area": areas_map[item['Area']] if item.get("Area") else "",
-                "active": item["State"] in ["Active Member", "In trial", "Reachable"]
+                "name": item['fields']["Full Name"],
+                "email": item['fields']["Team Email"],
+                "area": areas_map[item['fields']['Area']['id']] if item['fields'].get("Area") else "",
+                "active": item['fields']["State"] in ["Active Member", "In trial", "Reachable"]
             } for item in items
         ]
 
@@ -41,4 +41,4 @@ class NocoDB:
             "where": "(State,eq,Active Member)"
         })
         items = res.json().get("records")
-        return [item["Full Name"] for item in items]
+        return [item['fields']["Full Name"] for item in items]
