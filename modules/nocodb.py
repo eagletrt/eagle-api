@@ -11,28 +11,34 @@ class NocoDB:
         })
 
     def all_members(self) -> list[str]:
+        areas = self._session.get(f"{self.base_url}/api/v3/data/p1j4lzwj5w41492/mdvb2yn7yflq7yu/records", params={
+            "pageSize": 10,
+            "fields": "Tag"
+        }).json()['records']
+        areas_map = {
+            area['id']: area['fields']['Tag']
+            for area in areas
+        }
         res = self._session.get(f"{self.base_url}/api/v3/data/p1j4lzwj5w41492/muewy5068i7g63g/records", params={
-            "limit": 1000,
-            "fields": "Full Name,Team Email,Area,State",
-            "nested[Area][fields]": "Tag"
+            "pageSize": 1000,
+            "fields": "Full Name,Team Email,Area,State"
         })
-        items = res.json().get("list")
+        items = res.json().get("records")
 
         return [
             {
                 "name": item["Full Name"],
                 "email": item["Team Email"],
-                "area": item["Area"]["Tag"] if item.get("Area") else "",
+                "area": areas_map[item['Area']] if item.get("Area") else "",
                 "active": item["State"] in ["Active Member", "In trial", "Reachable"]
             } for item in items
         ]
 
     def public_members(self) -> list[dict]:
         res = self._session.get(f"{self.base_url}/api/v3/data/p1j4lzwj5w41492/muewy5068i7g63g/records", params={
-            "limit": 1000,
+            "pageSize": 1000,
             "fields": "Full Name",
             "where": "(State,eq,Active Member)"
         })
-        items = res.json().get("list")
-
+        items = res.json().get("records")
         return [item["Full Name"] for item in items]
