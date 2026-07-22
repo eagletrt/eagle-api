@@ -67,21 +67,6 @@ async def lab_presenza_confirm(x_email: str=Header(default=None)):
             return HTMLResponse(content="Entrata confermata.", status_code=200)
 
 
-@app.get("/lab/ore")
-async def lab_ore(username: str) -> dict:
-    now = datetime.now()
-    with db_session:
-        presenze = PresenzaLab.select(lambda p: p.email == f"{username}@eagletrt.it")
-        latest = presenze.order_by(desc(PresenzaLab.entrata)).first()
-        inLab = latest and latest.isActive
-
-        presenze = presenze.filter(lambda p: p.entrata.month == now.month and p.entrata.year == now.year)
-        return {
-            "ore": sum([utils.timedelta_to_hours(p.duration) for p in list(presenze)]),
-            "inlab": inLab
-        }
-
-
 @app.get("/lab/leaderboard")
 async def lab_leaderboard(since: str="", until: str="", x_email: str=Header(default=None)) -> dict:
     if not x_email:
@@ -112,16 +97,6 @@ async def lab_leaderboard(since: str="", until: str="", x_email: str=Header(defa
             "leaderboard": leaderboard,
             "since": since_date.strftime("%Y-%m-%d"),
             "until": until_date.strftime("%Y-%m-%d")
-        }
-
-
-@app.get("/lab/inlab")
-async def lab_inlab() -> dict:
-    with db_session:
-        in_lab = select(p.email for p in PresenzaLab if p.isActive)
-        return {
-            "count": len(in_lab),
-            "people": list(in_lab)
         }
 
 
