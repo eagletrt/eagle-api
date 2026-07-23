@@ -107,7 +107,7 @@ async def forms(form_type: str, form_uuid: str, x_email: str=Header(default=None
         raise HTTPException(status_code=400, detail="Missing authentication")
 
     payload = {
-        "email": x_email,
+        "email": x_email.replace("@eagletrt.it", "@studenti.unitn.it"),
         "type": form_type,
         "exp": datetime.now(timezone.utc) + timedelta(minutes=30)
     }
