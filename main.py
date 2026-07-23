@@ -1,11 +1,12 @@
+import jwt
 import json
 import schedule
 from time import sleep
 from threading import Thread
-from datetime import datetime, timedelta
-from fastapi.responses import HTMLResponse
-from pony.orm import db_session, desc, select
+from pony.orm import db_session, desc
+from datetime import datetime, timedelta, timezone
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import FastAPI, HTTPException, Header, Query, Request
 
 from modules.nocodb import NocoDB
@@ -98,6 +99,21 @@ async def lab_leaderboard(since: str="", until: str="", x_email: str=Header(defa
             "since": since_date.strftime("%Y-%m-%d"),
             "until": until_date.strftime("%Y-%m-%d")
         }
+
+
+@app.get("/forms/{form_type}/{form_uuid}")
+async def forms(form_type: str, form_uuid: str, x_email: str=Header(default=None)) -> dict:
+    if not x_email:
+        raise HTTPException(status_code=400, detail="Missing authentication")
+
+    payload = {
+        "email": x_email,
+        "type": form_type,
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=30)
+    }
+    token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm="HS256")
+    redirect_url = f"{nocodb.base_url}/nc/form/{form_uuid}?form_jwt={token}"
+    return RedirectResponse(url=redirect_url)
 
 
 @app.get("/website/members")

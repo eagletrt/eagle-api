@@ -16,8 +16,9 @@ TLM_TOKEN_DURATION: int = int(os.getenv("TLM_TOKEN_DURATION", 28800))
 TLM_TOKEN_REFRESH: int = int(os.getenv("TLM_TOKEN_REFRESH", 3600))
 TLM_MQTT_TOPICS_URL: str = os.getenv("TLM_MQTT_TOPICS_URL")
 EMQX_BEARER_TOKEN: str = os.getenv("EMQX_BEARER_TOKEN")
+JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY")
 
 for required_var in ["BOT_TOKEN", "NOCODB_API_TOKEN", "TLM_MQTT_TOPICS_URL", "EMQX_BEARER_TOKEN",
-                     "DB_USERNAME", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME"]:
+                     "DB_USERNAME", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME", "JWT_SECRET_KEY"]:
     if not globals()[required_var]:
         raise EnvironmentError(f"{required_var} environment variable is not set")
