@@ -1,13 +1,12 @@
 import jwt
-import json
 import schedule
 from time import sleep
 from threading import Thread
 from pony.orm import db_session, desc
 from datetime import datetime, timedelta, timezone
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi import FastAPI, HTTPException, Header, Query, Request
 
 from modules.nocodb import NocoDB
 from modules import settings, utils
@@ -102,7 +101,7 @@ async def lab_leaderboard(since: str="", until: str="", x_email: str=Header(defa
 
 
 @app.get("/forms/{form_type}/{form_uuid}")
-async def forms(form_type: str, form_uuid: str, x_email: str=Header(default=None)) -> dict:
+async def forms(form_type: str, form_uuid: str, x_email: str=Header(default=None)) -> RedirectResponse:
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
@@ -117,103 +116,16 @@ async def forms(form_type: str, form_uuid: str, x_email: str=Header(default=None
 
 
 @app.get("/website/members")
-async def website_members():
+async def website_members() -> dict:
     return {"members": nocodb.public_members()}
 
 
 @app.get("/members")
-async def members(x_email: str=Header(default=None)):
+async def members(x_email: str=Header(default=None)) -> dict:
     if not x_email:
         raise HTTPException(status_code=400, detail="Missing authentication")
 
     return {"members": nocodb.all_members()}
-
-
-@app.get("/api/v1/auth/login", response_class=HTMLResponse, response_model=None)
-async def telemetry_v1_login(x_email: str=Header(default=None)):
-    if not x_email:
-        raise HTTPException(status_code=400, detail="Missing authentication")
-
-    with db_session:
-        if not (user := TelemetryUser.get(email=x_email)):
-            user = TelemetryUser(email=x_email)
-
-        if not user.hasValidToken:
-            user.generateToken()
-
-        return HTMLResponse(
-            content=f"Your token is: <code>{user.token}</code>",
-            status_code=200
-        )
-
-
-@app.post("/api/v1/auth/retrieveToken")
-async def telemetry_v1_retrieve_token(request: Request) -> dict:
-    raw_body = await request.body()
-    data = json.loads(raw_body)
-    body = TelemetryToken(**data)
-    with db_session:
-        try:
-            user = TelemetryUser.get(token=body.token)
-            if (not user) or (not user.hasValidToken):
-                raise HTTPException(status_code=403, detail="Token expired or not found")
-        except ValueError:
-            raise HTTPException(status_code=403, detail="Invalid token")
-
-        return {
-            "token": {
-                "access_token": user.token,
-                "refresh_token": user.token,
-                "expire": int(user.expiry.timestamp()),
-                "token_type": "Bearer"
-            },
-            "user": {
-                "email": user.email,
-                "role": user.role,
-            }
-        }
-
-
-@app.post("/api/v1/auth/refreshToken")
-async def telemetry_v1_refresh_token(request: Request) -> dict:
-    raw_body = await request.body()
-    data = json.loads(raw_body)
-    body = TelemetryToken(**data)
-    with db_session:
-        try:
-            user = TelemetryUser.get(token=body.token)
-            if (not user) or (not user.hasValidToken):
-                raise HTTPException(status_code=403, detail="Token expired or not found")
-        except ValueError:
-            raise HTTPException(status_code=403, detail="Invalid token")
-
-        user.refreshToken()
-        return {
-            "response": {
-                "access_token": user.token,
-                "refresh_token": user.token,
-                "expire": int(user.expiry.timestamp()),
-                "token_type": "Bearer"
-            }
-        }
-
-
-@app.get("/api/v1/auth/whoAmI")
-async def telemetry_v1_whoami(Authorization: str=Header(default=None)) -> dict:
-    token = Authorization.split(" ", 1)[1] if Authorization and " " in Authorization else None
-    with db_session:
-        try:
-            user = TelemetryUser.get(token=token)
-            if (not token) or (not user) or (not user.hasValidToken):
-                raise HTTPException(status_code=403, detail="Token expired or not found")
-        except ValueError:
-            raise HTTPException(status_code=403, detail="Invalid token")
-        return {
-            "response": {
-                "email": user.email,
-                "role": user.role
-            }
-        }
 
 
 @app.get("/telemetry/login")
