@@ -1,6 +1,7 @@
 import re
 import json
 import requests
+from random import choice
 from datetime import timedelta
 from fastapi.responses import HTMLResponse
 from modules import settings
@@ -30,16 +31,6 @@ def orelab_entrata(ore_oggi: float) -> HTMLResponse:
     return HTMLResponse(content=res, status_code=200)
 
 
-def telemetry_login_html(callback_url: str, payload: dict) -> HTMLResponse:
-    safe_url = json.dumps(callback_url)
-    safe_payload = json.dumps(payload)
-    with open("pages/telemetry_login.html") as f:
-        res = f.read() \
-                .replace("{callback_url}", safe_url) \
-                .replace("{payload}", safe_payload)
-    return HTMLResponse(content=res, status_code=200)
-
-
 def orelab_uscita(ore: float, ore_oggi: float) -> HTMLResponse:
     emoji_dict = {
         0: "😐",
@@ -49,7 +40,18 @@ def orelab_uscita(ore: float, ore_oggi: float) -> HTMLResponse:
         4: "😌",
         5: "😎"
     }
+    quotes = [
+        "vabon dai non ci crede nessuno",
+        "si ma se dormi non vale",
+        "is it endurance time yet?",
+        "segno le ore solo se sistemi il porco",
+        "it's racing (maybe)",
+        "auguri fede"
+    ]
     emoji = emoji_dict.get(int(ore_oggi // 1), "🥹")
+    if ore_oggi >= 24:
+        emoji += f"<br><br>{choice(quotes)}"
+
     ore = pretty_time(ore)
     ore_oggi = pretty_time(ore_oggi)
 
@@ -58,6 +60,17 @@ def orelab_uscita(ore: float, ore_oggi: float) -> HTMLResponse:
                 .replace("{ore}", ore) \
                 .replace("{ore_oggi}", ore_oggi) \
                 .replace("{happy_hour_emoji}", emoji)
+
+    return HTMLResponse(content=res, status_code=200)
+
+
+def telemetry_login_html(callback_url: str, payload: dict) -> HTMLResponse:
+    safe_url = json.dumps(callback_url)
+    safe_payload = json.dumps(payload)
+    with open("pages/telemetry_login.html") as f:
+        res = f.read() \
+                .replace("{callback_url}", safe_url) \
+                .replace("{payload}", safe_payload)
     return HTMLResponse(content=res, status_code=200)
 
 

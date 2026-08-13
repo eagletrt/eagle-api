@@ -260,6 +260,6 @@ def run_schedules():
 
 if __name__ == "__main__":
     import uvicorn
-    schedule.every().day.at("04:00").do(deleteActivePresenze)
+    # schedule.every().day.at("04:00").do(deleteActivePresenze)
     Thread(target=run_schedules, daemon=True).start()
     uvicorn.run(app, host=settings.API_HOST, port=settings.API_PORT, root_path=settings.API_PATH)
