@@ -46,10 +46,11 @@ def orelab_uscita(ore: float, ore_oggi: float) -> HTMLResponse:
         "is it endurance time yet?",
         "segno le ore solo se sistemi il porco",
         "it's racing (maybe)",
-        "auguri fede"
+        "auguri fede",
+        "FSG judge jumpscare 👻"
     ]
     emoji = emoji_dict.get(int(ore_oggi // 1), "🥹")
-    if ore_oggi >= 24:
+    if ore >= 24:
         emoji += f"<br><br>{choice(quotes)}"
 
     ore = pretty_time(ore)
