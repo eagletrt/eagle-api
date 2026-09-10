@@ -212,6 +212,23 @@ async def emqx_auth(body: EMQXAuthRequest, Authorization: str=Header(default=Non
                     qos=[topic["qos"]]
                 )
             )
+
+        acls.append(
+            EMQXAuthResponse.AclItem(
+                permission=EMQXAuthResponse.Permission.ALLOW.value,
+                action=EMQXAuthResponse.Action.SUBSCRIBE.value,
+                topic="#",
+                qos=[0, 1, 2]
+            )
+        )
+        acls.append(
+            EMQXAuthResponse.AclItem(
+                permission=EMQXAuthResponse.Permission.ALLOW.value,
+                action=EMQXAuthResponse.Action.PUBLISH.value,
+                topic="#",
+                qos=[0, 1, 2]
+            )
+        )
         return acls
 
     empty_response = EMQXAuthResponse(
