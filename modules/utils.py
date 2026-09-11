@@ -7,8 +7,17 @@ from fastapi.responses import HTMLResponse
 from modules import settings
 from modules.database import PresenzaLab
 
+def fetch_mqtt_topics(timeout: int=3) -> list:
+    response = requests.get(settings.TLM_MQTT_TOPICS_URL, timeout=timeout)
+    response.raise_for_status()
+    topics = response.json()
+    if not isinstance(topics, list):
+        raise ValueError("Invalid MQTT topics payload")
+    return topics
+
+
 # Initialize MQTT topics cache
-MQTT_TOPICS = requests.get(settings.TLM_MQTT_TOPICS_URL, timeout=3).json()
+MQTT_TOPICS = fetch_mqtt_topics()
 
 
 def timedelta_to_hours(td: timedelta) -> float:
@@ -98,6 +107,16 @@ def notify_exit(presenza: PresenzaLab):
     pretty_duration = pretty_time(timedelta_to_hours(presenza.duration))
     msg = f"💔 {presenza.email} has exited the lab ({pretty_duration})"
     notify_telegram(msg)
+
+
+def refresh_mqtt_topics() -> bool:
+    global MQTT_TOPICS
+    try:
+        MQTT_TOPICS = fetch_mqtt_topics()
+        return True
+    except (requests.RequestException, ValueError) as e:
+        print(f"Failed to refresh MQTT topics: {e}")
+        return False
 
 
 def mqtt_topics_to_emqx(topics: list) -> list:

@@ -18,6 +18,9 @@ nocodb = NocoDB(
     base_url="https://nocodb.eagletrt.it",
     api_key=settings.NOCODB_API_TOKEN
 )
+SCHEDULES_INITIALIZED = False
+SCHEDULER_THREAD = None
+MQTT_TOPICS_REFRESH_MINUTES = max(settings.TLM_MQTT_TOPICS_REFRESH_MINUTES, 15)
 
 # Fix CORS
 app.add_middleware(
@@ -275,8 +278,33 @@ def run_schedules():
         sleep(10)
 
 
+def setup_schedules():
+    global SCHEDULES_INITIALIZED
+    if SCHEDULES_INITIALIZED:
+        return
+
+    schedule.every().day.at("04:00").do(deleteActivePresenze)
+    schedule.every(MQTT_TOPICS_REFRESH_MINUTES).minutes.do(utils.refresh_mqtt_topics)
+    SCHEDULES_INITIALIZED = True
+
+
+def start_scheduler_thread():
+    global SCHEDULER_THREAD
+    if SCHEDULER_THREAD and SCHEDULER_THREAD.is_alive():
+        return
+
+    SCHEDULER_THREAD = Thread(target=run_schedules, daemon=True)
+    SCHEDULER_THREAD.start()
+
+
+@app.on_event("startup")
+async def startup_event():
+    setup_schedules()
+    start_scheduler_thread()
+
+
 if __name__ == "__main__":
     import uvicorn
-    schedule.every().day.at("04:00").do(deleteActivePresenze)
-    Thread(target=run_schedules, daemon=True).start()
+    setup_schedules()
+    start_scheduler_thread()
     uvicorn.run(app, host=settings.API_HOST, port=settings.API_PORT, root_path=settings.API_PATH)
