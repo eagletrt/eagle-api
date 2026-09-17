@@ -280,4 +280,5 @@ if __name__ == "__main__":
     schedule.every().day.at("04:00").do(deleteActivePresenze)
     schedule.every(15).minutes.do(utils.update_mqtt_topics)
     Thread(target=run_schedules, daemon=True).start()
+    utils.update_mqtt_topics()
     uvicorn.run(app, host=settings.API_HOST, port=settings.API_PORT, root_path=settings.API_PATH)
