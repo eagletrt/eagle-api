@@ -7,8 +7,9 @@ from fastapi.responses import HTMLResponse
 from modules import settings
 from modules.database import PresenzaLab
 
-# Initialize MQTT topics cache
-MQTT_TOPICS = requests.get(settings.TLM_MQTT_TOPICS_URL, timeout=3).json()
+def update_mqtt_topics():
+    global MQTT_TOPICS
+    MQTT_TOPICS = requests.get(settings.TLM_MQTT_TOPICS_URL, timeout=3).json()
 
 
 def timedelta_to_hours(td: timedelta) -> float:
