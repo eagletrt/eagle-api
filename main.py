@@ -108,7 +108,7 @@ async def forms(form_type: str, form_uuid: str, x_email: str=Header(default=None
     payload = {
         "email": x_email.replace("@eagletrt.it", "@studenti.unitn.it"),
         "type": form_type,
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=30)
+        "exp": datetime.now(timezone.utc) + timedelta(hours=4)
     }
     token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm="HS256")
     redirect_url = f"{nocodb.base_url}/nc/form/{form_uuid}?form_jwt={token}"
