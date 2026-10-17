@@ -53,8 +53,7 @@ class NocoDB:
                 for person_id in _linked_ids(role['fields'].get("People")):
                     roles[person_id].add(tag)
 
-        projects = self._records(self._table_id(PROJECTS_TABLE), pageSize=1000, fields="Head",
-                                 where="(Type,eq,Project)")
+        projects = self._records(self._table_id(PROJECTS_TABLE), pageSize=1000, fields="Head")
         for project in projects:
             for person_id in _linked_ids(project['fields'].get("Head")):
                 roles[person_id].add(PROJECT_HEAD_ROLE)
